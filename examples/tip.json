@@ -1,0 +1,12 @@
+{
+  "date": "2026-08-01",
+  "home": "Sao Paulo",
+  "away": "Palmeiras",
+  "market": "over_under",
+  "side": "over",
+  "line": "2.5",
+  "odd": 1.95,
+  "kickoff": "2026-08-01T21:30:00-03:00",
+  "capValue": 500,
+  "note": "Ambos marcam nos ultimos 5 confrontos."
+}

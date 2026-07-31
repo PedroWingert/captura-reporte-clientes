@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Peguei diferente</title>
+  <!-- SDK oficial do Telegram Mini App. E o unico script externo permitido. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app">
+    <header>
+      <h1>Registrar entrada</h1>
+      <p id="tip-line" class="muted">Carregando a tip…</p>
+    </header>
+
+    <section id="form-area" hidden>
+      <p class="hint">Informe quanto entrou e com qual odd. Dividiu em mais de uma casa? Adicione linhas.</p>
+
+      <div id="houses"></div>
+
+      <button type="button" id="add-house" class="secondary">+ Adicionar casa</button>
+
+      <div class="total-row">
+        <span>Total</span>
+        <strong id="total">0</strong>
+        <span id="cap-note" class="muted"></span>
+      </div>
+
+      <button type="button" id="submit" class="primary">Enviar registro</button>
+    </section>
+
+    <section id="message-area" hidden>
+      <p id="message"></p>
+      <button type="button" id="retry" class="secondary" hidden>Tentar de novo</button>
+    </section>
+
+    <footer>
+      <!-- Armadilha 11: carimbo de versao visivel. -->
+      <span id="version" class="muted">v…</span>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

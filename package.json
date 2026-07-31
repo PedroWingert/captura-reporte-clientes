@@ -1,0 +1,20 @@
+{
+  "name": "captura-reporte-clientes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Captura, no momento da tip, o que cada cliente efetivamente apostou — botoes no canal do Telegram + Mini App.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "server": "node src/server.js",
+    "bot": "node src/telegram/bot.js",
+    "post": "node bin/post-tip.js",
+    "report": "node bin/report.js",
+    "purge": "node bin/purge-bet.js",
+    "test": "node --test"
+  },
+  "dependencies": {}
+}
