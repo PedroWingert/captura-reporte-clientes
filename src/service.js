@@ -6,8 +6,9 @@ import { config } from './config.js';
 import { VERSION } from './version.js';
 
 // Grava o clique de um botao simples: 'taken' (peguei) ou 'declined' (nao peguei).
-// odd e opcional (odd divulgada, para 'taken').
-export function recordButton({ betKey, clientId, clientName, status, odd = null, actionTs, now = Date.now() }) {
+// Para 'taken', a perna herda a stake (unidades) e a odd DA TIP — o cliente pegou
+// como divulgado. O tipster pode ajustar depois no dashboard.
+export function recordButton({ betKey, clientId, clientName, status, actionTs, now = Date.now() }) {
   if (status !== 'taken' && status !== 'declined') {
     throw new Error(`status invalido para botao: ${status}`);
   }
@@ -18,27 +19,32 @@ export function recordButton({ betKey, clientId, clientName, status, odd = null,
   const ko = kickoffGate(tip, { now, strict: config.strictGates });
   if (!ko.ok) return { ok: false, ...ko };
 
+  // 'taken' vira uma perna com a stake/odd da tip (o que o cliente pegou "como esta").
+  const legs = status === 'taken'
+    ? [{ stakeUnits: tip?.stakeUnits ?? null, odd: tip?.odd ?? null }]
+    : null;
+
   const res = store.upsertReport({
     betKey,
     clientId,
     clientName,
     status,
-    odd: status === 'taken' ? odd : null,
-    stakes: null,
+    odd: status === 'taken' ? (tip?.odd ?? null) : null,
+    stakes: legs,
     source: 'button',
     actionTs: actionTs || new Date(now).toISOString(),
     version: VERSION,
   });
 
   const msg = status === 'taken'
-    ? `Registrado: voce PEGOU${odd ? ` @${odd}` : ''}. Se entrou com valor ou odd diferente, use "Peguei diferente".`
+    ? 'Registrado: voce PEGOU (como divulgado). Se entrou com valor ou odd diferente, use "Peguei diferente".'
     : 'Registrado: voce NAO pegou esta. Nada sera cobrado por ela.';
 
   return { ok: true, applied: res.applied, message: msg, record: res.record };
 }
 
-// Grava o formulario (Mini App): 'different', possivelmente dividido em varias casas.
-// stakes: [{ house, stake, odd }]. Passa pelo portao do apito e pelo teto de valor.
+// Grava o formulario (Mini App): 'different', com uma ou mais pernas.
+// stakes: [{ stakeUnits, odd, house? }] — tudo em UNIDADES.
 export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now = Date.now() }) {
   const store = getStore();
   const tip = store.getTip(betKey);
@@ -46,16 +52,20 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
   const ko = kickoffGate(tip, { now, strict: config.strictGates });
   if (!ko.ok) return { ok: false, ...ko };
 
-  if (!Array.isArray(stakes) || stakes.length === 0) {
-    return { ok: false, code: 'VALOR_INVALIDO', message: 'Informe pelo menos uma entrada (casa, valor e odd).' };
+  const legs = (Array.isArray(stakes) ? stakes : [])
+    .map((s) => ({ house: String(s.house || '').trim(), stakeUnits: Number(s.stakeUnits), odd: Number(s.odd) }))
+    .filter((l) => !Number.isNaN(l.stakeUnits) && l.stakeUnits > 0);
+
+  if (legs.length === 0) {
+    return { ok: false, code: 'VALOR_INVALIDO', message: 'Informe pelo menos uma entrada com stake (em unidades) maior que zero.' };
   }
 
-  const total = totalStake(stakes);
+  const total = totalStake(legs);
   const cap = valueCapGate(tip, total, { now, strict: config.strictGates });
   if (!cap.ok) return { ok: false, ...cap };
 
-  // odd "principal" = a de maior stake, so para exibicao rapida no relatorio.
-  const principal = [...stakes].sort((a, b) => Number(b.stake) - Number(a.stake))[0];
+  // odd "principal" = a da perna de maior stake, so para exibicao rapida.
+  const principal = [...legs].sort((a, b) => b.stakeUnits - a.stakeUnits)[0];
 
   const res = store.upsertReport({
     betKey,
@@ -63,7 +73,7 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
     clientName,
     status: 'different',
     odd: principal?.odd ?? null,
-    stakes: stakes.map((s) => ({ house: String(s.house || '').trim(), stake: Number(s.stake), odd: Number(s.odd) })),
+    stakes: legs,
     source: 'form',
     actionTs: actionTs || new Date(now).toISOString(),
     version: VERSION,
@@ -73,7 +83,7 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
     ok: true,
     applied: res.applied,
     message: res.applied
-      ? `Registrado: entrada de ${total} em ${stakes.length} casa(s).`
+      ? `Registrado: ${total}u em ${legs.length} entrada(s).`
       : 'Ja havia um registro mais recente para esta aposta; o mais novo foi mantido.',
     record: res.record,
   };

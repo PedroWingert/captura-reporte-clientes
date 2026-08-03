@@ -47,6 +47,8 @@ export const config = {
   // briefing). Quando false (padrao), tips sem apito/teto simplesmente nao sao
   // gateadas por eles — para fluxos que so mandam times, mercado e stake.
   strictGates: String(process.env.STRICT_GATES || '').toLowerCase() === 'true',
+  // Senha do dashboard de acerto de contas (/admin). Sem ela, o dashboard fica off.
+  adminDashToken: process.env.ADMIN_DASH_TOKEN || '',
   publicUrl: (process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   port: Number(process.env.PORT || 3000),
   initDataMaxAgeSeconds: Number(process.env.INITDATA_MAX_AGE_SECONDS || 86400),

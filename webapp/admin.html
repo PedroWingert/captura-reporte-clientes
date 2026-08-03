@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Acerto de contas</title>
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <!-- Tela de senha -->
+  <div id="login" class="login">
+    <div class="login-box">
+      <h1>Acerto de contas</h1>
+      <p class="muted">Digite a senha do dashboard.</p>
+      <input id="token" type="password" placeholder="Senha" autocomplete="current-password" />
+      <button id="enter" class="primary">Entrar</button>
+      <p id="login-error" class="err" hidden></p>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app" hidden>
+    <header class="topbar">
+      <strong>Acerto de contas</strong>
+      <div class="tabs">
+        <button class="tab active" data-view="apostas">Apostas</button>
+        <button class="tab" data-view="mes">Acerto do mês</button>
+      </div>
+      <button id="logout" class="link">sair</button>
+    </header>
+
+    <main>
+      <!-- Visualizacao 1: apostas -->
+      <section id="view-apostas" class="view">
+        <div id="tips"></div>
+        <p id="tips-empty" class="muted" hidden>Nenhuma tip publicada ainda.</p>
+      </section>
+
+      <!-- Visualizacao 2: acerto do mes -->
+      <section id="view-mes" class="view" hidden>
+        <div class="mes-head">
+          <label>Mês:
+            <select id="mes-select"></select>
+          </label>
+        </div>
+        <table id="mes-table" class="tabela">
+          <thead>
+            <tr><th>Cliente</th><th>R$/unidade</th><th>Resultado (u)</th><th>Resultado (R$)</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer><span id="version" class="muted">v…</span></footer>
+  </div>
+
+  <script src="./admin.js"></script>
+</body>
+</html>

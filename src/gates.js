@@ -75,8 +75,8 @@ export function valueCapGate(tip, totalReported, { now = Date.now(), strict = fa
   return { ok: true };
 }
 
-// Soma o total reportado a partir das stakes (uma ou varias casas).
-export function totalStake(stakes) {
-  if (!Array.isArray(stakes)) return NaN;
-  return stakes.reduce((acc, s) => acc + Number(s.stake || 0), 0);
+// Soma o total reportado (em unidades) a partir das pernas.
+export function totalStake(legs) {
+  if (!Array.isArray(legs)) return NaN;
+  return legs.reduce((acc, s) => acc + Number(s.stakeUnits || 0), 0);
 }

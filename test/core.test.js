@@ -86,8 +86,8 @@ test('teto: sem cap nao limita no padrao, falha fechado no estrito, barra acima 
   assert.equal(valueCapGate({ capValue: 500 }, 0).ok, false); // valor invalido
 });
 
-test('total das stakes soma varias casas', () => {
-  assert.equal(totalStake([{ stake: 100 }, { stake: 50.5 }]), 150.5);
+test('total das stakes (unidades) soma varias pernas', () => {
+  assert.equal(totalStake([{ stakeUnits: 1 }, { stakeUnits: 0.5 }]), 1.5);
 });
 
 test('upsert: precedencia por actionTs, entrega atrasada nao vence', () => {

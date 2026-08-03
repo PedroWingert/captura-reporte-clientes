@@ -40,8 +40,8 @@ function formatReporteTelegram(betKey) {
     if (l.estado === 'taken') d = `✅ Peguei${l.odd ? ` @${l.odd}` : ''}`;
     else if (l.estado === 'declined') d = '❌ Nao peguei';
     else if (l.estado === 'different') {
-      const casas = (l.stakes || []).map((s) => `${esc(s.house || '?')} R$${s.stake}${s.odd ? ` @${s.odd}` : ''}`).join(' + ');
-      d = `✏️ Diferente: ${casas || (l.total != null ? `R$${l.total}` : '')}`;
+      const casas = (l.stakes || []).map((s) => `${s.stakeUnits}u${s.odd ? ` @${s.odd}` : ''}${s.house ? ` (${esc(s.house)})` : ''}`).join(' + ');
+      d = `✏️ Diferente: ${casas || (l.total != null ? `${l.total}u` : '')}`;
     } else d = 'Nao respondeu';
     return `• ${esc(l.clientName || l.clientId)} — ${d}`;
   });

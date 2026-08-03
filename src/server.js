@@ -13,6 +13,7 @@ import { config } from './config.js';
 import { validateInitData } from './telegram/initData.js';
 import { getStore } from './store/index.js';
 import { recordForm } from './service.js';
+import { buildDashboard, setResult, setEntry, setClient } from './admin.js';
 import { VERSION, BOOTED_AT } from './version.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -135,6 +136,39 @@ async function handleApi(req, res, url) {
     return send(res, 200, out);
   }
 
+  // ---- API do dashboard de acerto de contas (protegida por senha) ----
+  if (url.pathname.startsWith('/api/admin/')) {
+    if (!config.adminDashToken) {
+      return send(res, 503, { ok: false, message: 'Dashboard desativado: defina ADMIN_DASH_TOKEN no servidor.' });
+    }
+    let body;
+    try { body = await readJsonBody(req); } catch (e) { return send(res, 400, { ok: false, message: e.message }); }
+    // Confere a senha em tempo ~constante.
+    const a = Buffer.from(String(body.token || ''));
+    const b = Buffer.from(config.adminDashToken);
+    const okToken = a.length === b.length && (await import('node:crypto')).timingSafeEqual(a, b);
+    if (!okToken) return send(res, 401, { ok: false, message: 'Senha do dashboard incorreta.' });
+
+    if (url.pathname === '/api/admin/dashboard') {
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/result') {
+      const tip = setResult(body.betKey, body.result ?? null);
+      if (!tip) return send(res, 404, { ok: false, message: 'Tip nao encontrada.' });
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/entry') {
+      const r = setEntry(body.betKey, body.clientId, body.legs || []);
+      if (!r) return send(res, 404, { ok: false, message: 'Entrada nao encontrada (cliente nao respondeu esta tip).' });
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/client') {
+      setClient(body.clientId, { name: body.name, unitValue: body.unitValue });
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    return send(res, 404, { ok: false, error: 'rota admin desconhecida' });
+  }
+
   return send(res, 404, { ok: false, error: 'rota desconhecida' });
 }
 
@@ -145,6 +179,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/' || url.pathname === '/index.html') return serveStatic(res, 'index.html');
     if (url.pathname === '/app.js') return serveStatic(res, 'app.js');
     if (url.pathname === '/styles.css') return serveStatic(res, 'styles.css');
+    if (url.pathname === '/admin' || url.pathname === '/admin.html') return serveStatic(res, 'admin.html');
+    if (url.pathname === '/admin.js') return serveStatic(res, 'admin.js');
+    if (url.pathname === '/admin.css') return serveStatic(res, 'admin.css');
     return send(res, 404, { error: 'nao encontrado' });
   } catch (err) {
     console.error('[server] erro nao tratado:', err);

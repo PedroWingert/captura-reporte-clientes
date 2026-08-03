@@ -10,9 +10,10 @@ function nowIso() {
 
 function emptyDb() {
   // reports: mapa "<betKey>:<clientId>" -> registro
-  // tips:    mapa "<betKey>" -> metadados da tip (kickoff, cap, etc.)
+  // tips:    mapa "<betKey>" -> metadados da tip (kickoff, cap, result, etc.)
   // seenAuth: mapa "<hash>" -> auth_date, para barrar replay do initData
-  return { reports: {}, tips: {}, seenAuth: {} };
+  // clients: mapa "<clientId>" -> { name, unitValue } (cadastro para o acerto)
+  return { reports: {}, tips: {}, seenAuth: {}, clients: {} };
 }
 
 export class JsonStore {
@@ -107,6 +108,44 @@ export class JsonStore {
 
   reportsForTip(betKey) {
     return Object.values(this.db.reports).filter((r) => r.betKey === betKey);
+  }
+
+  allReports() {
+    return Object.values(this.db.reports);
+  }
+
+  // ---- resultado da tip (green | red | void | null) ----
+  setTipResult(betKey, result) {
+    const tip = this.db.tips[betKey];
+    if (!tip) return null;
+    tip.result = result; // 'green' | 'red' | 'void' | null
+    tip.resultTs = new Date().toISOString();
+    this._flush();
+    return tip;
+  }
+
+  // ---- edicao das pernas de uma entrada (stake/odd) pelo dashboard ----
+  setEntryLegs(betKey, clientId, legs) {
+    const key = this._rk(betKey, clientId);
+    const r = this.db.reports[key];
+    if (!r) return null;
+    r.stakes = legs;
+    r.editedTs = new Date().toISOString();
+    this._flush();
+    return r;
+  }
+
+  // ---- cadastro de clientes (nome amigavel + valor da unidade em R$) ----
+  getClients() {
+    return this.db.clients;
+  }
+
+  upsertClient(clientId, patch) {
+    const id = String(clientId);
+    const prev = this.db.clients[id] || {};
+    this.db.clients[id] = { ...prev, ...patch };
+    this._flush();
+    return this.db.clients[id];
   }
 
   // ---- replay do initData ----

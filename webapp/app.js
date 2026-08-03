@@ -26,8 +26,8 @@
     const div = document.createElement('div');
     div.className = 'house';
     div.innerHTML =
-      '<div class="full"><label>Casa</label><input class="h-house" placeholder="Ex.: Bet365" /></div>' +
-      '<div><label>Valor</label><input class="h-stake" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" /></div>' +
+      '<div class="full"><label>Casa (opcional)</label><input class="h-house" placeholder="Ex.: Bet365" /></div>' +
+      '<div><label>Stake (unidades)</label><input class="h-stake" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,75" /></div>' +
       '<div><label>Odd</label><input class="h-odd" type="number" inputmode="decimal" min="1" step="0.01" placeholder="0,00" /></div>' +
       '<button type="button" class="remove-house">remover</button>';
     div.querySelector('.remove-house').addEventListener('click', () => {
@@ -42,10 +42,10 @@
     housesBox.querySelectorAll('.house').forEach((h) => {
       total += Number(h.querySelector('.h-stake').value || 0);
     });
-    totalEl.textContent = String(Math.round(total * 100) / 100);
+    totalEl.textContent = (Math.round(total * 100) / 100) + 'u';
     if (capValue != null) {
       const over = total > capValue;
-      capNote.textContent = `de ${capValue} permitido`;
+      capNote.textContent = `de ${capValue}u permitido`;
       capNote.style.color = over ? '#c0392b' : '';
     }
     return total;
@@ -55,9 +55,9 @@
     const stakes = [];
     housesBox.querySelectorAll('.house').forEach((h) => {
       const house = h.querySelector('.h-house').value.trim();
-      const stake = Number(h.querySelector('.h-stake').value || 0);
+      const stakeUnits = Number(h.querySelector('.h-stake').value || 0);
       const odd = Number(h.querySelector('.h-odd').value || 0);
-      if (stake > 0) stakes.push({ house, stake, odd });
+      if (stakeUnits > 0) stakes.push({ house, stakeUnits, odd });
     });
     return stakes;
   }
