@@ -200,6 +200,15 @@
   $('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryEnter(); });
   $('logout').addEventListener('click', () => { localStorage.removeItem(LS_KEY); token = ''; showLogin(); });
 
+  // Recarrega os dados sem precisar sair/entrar.
+  async function reload() {
+    try { render(await api('/api/admin/dashboard', {})); }
+    catch (e) { if (e.message === '401') showLogin('Sessão expirada, entre de novo.'); }
+  }
+  $('refresh').addEventListener('click', reload);
+  // Ao voltar para a aba/janela, atualiza sozinho (pega tips publicadas nesse meio-tempo).
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('app').hidden && token) reload(); });
+
   // auto-login se ja tem token salvo
   if (token) {
     api('/api/admin/dashboard', {}).then((d) => { $('login').hidden = true; $('app').hidden = false; render(d); }).catch(() => showLogin());
