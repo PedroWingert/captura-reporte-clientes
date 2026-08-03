@@ -119,7 +119,8 @@
     const row = document.createElement('div');
     row.className = 'entry ' + en.estado;
     const tag = { taken: 'Peguei', different: 'Diferente', declined: 'Não pegou', sem_resposta: 'Sem resposta' }[en.estado] || '';
-    const whoHtml = `<div class="who">${esc(en.clientName)}<span class="tag">${tag}</span></div>`;
+    const linhaTag = en.line ? `<span class="tag" style="color:#fab219">linha ${esc(en.line)}</span>` : '';
+    const whoHtml = `<div class="who">${esc(en.clientName)}<span class="tag">${tag}</span>${linhaTag}</div>`;
     if (en.estado === 'declined' || en.estado === 'sem_resposta') {
       row.innerHTML = whoHtml + `<div class="pnl zero">—</div>`;
       return row;

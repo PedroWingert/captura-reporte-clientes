@@ -102,7 +102,7 @@
       const badge = t.result ? `<span class="badge ${t.result}">${RESULT_LABEL[t.result]}</span>` : '<span class="badge void">pendente</span>';
       const linha = [t.market, t.line].filter(Boolean).join(' ');
       const pnl = t.result ? `<div class="p ${cls(t.pnlUnits)}">${fmt(t.pnlUnits)}u</div>` : '<div class="p zero">—</div>';
-      const det = [t.stakeUnits != null ? t.stakeUnits + 'u' : '', t.odd ? '@' + t.odd : ''].filter(Boolean).join(' ');
+      const det = [t.stakeUnits != null ? t.stakeUnits + 'u' : '', t.odd ? '@' + t.odd : '', t.clientLine ? 'linha ' + t.clientLine : ''].filter(Boolean).join(' ');
       return `<div class="bet-item">
         <div class="bet-main"><div class="t">${esc(t.home)} x ${esc(t.away)} ${badge}</div><div class="m">${esc(linha)}${det ? ' · ' + esc(det) : ''}</div></div>
         <div class="bet-right">${pnl}<div class="d">${esc(t.date || '')}</div></div>

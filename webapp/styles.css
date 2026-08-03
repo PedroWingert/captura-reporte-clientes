@@ -78,6 +78,15 @@ button.primary { background: var(--accent); color: var(--accent-text); font-weig
 button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin: 4px 0; }
 button:disabled { opacity: 0.5; cursor: default; }
 
+.linha-diferente {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.linha-diferente label { text-transform: uppercase; letter-spacing: .4px; }
+.linha-diferente .hint { margin: 6px 0 0; }
+
 .total-row {
   display: flex;
   align-items: baseline;

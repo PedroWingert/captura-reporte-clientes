@@ -45,7 +45,7 @@ export function recordButton({ betKey, clientId, clientName, status, actionTs, n
 
 // Grava o formulario (Mini App): 'different', com uma ou mais pernas.
 // stakes: [{ stakeUnits, odd, house? }] — tudo em UNIDADES.
-export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now = Date.now() }) {
+export function recordForm({ betKey, clientId, clientName, stakes, line = '', actionTs, now = Date.now() }) {
   const store = getStore();
   const tip = store.getTip(betKey);
 
@@ -74,6 +74,7 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
     status: 'different',
     odd: principal?.odd ?? null,
     stakes: legs,
+    line: line ? String(line).trim() : null,
     source: 'form',
     actionTs: actionTs || new Date(now).toISOString(),
     version: VERSION,

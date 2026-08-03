@@ -59,7 +59,7 @@ export function buildDashboard({ month = null } = {}) {
         }
       }
       if ((!month || tipMonth === month)) totals.set(c.id, (totals.get(c.id) || 0) + pnl);
-      return { clientId: c.id, clientName: c.name, estado, legs, stakeUnits: round2(stake), pnlUnits: round2(pnl), faltaOdd };
+      return { clientId: c.id, clientName: c.name, estado, legs, stakeUnits: round2(stake), pnlUnits: round2(pnl), faltaOdd, line: r ? (r.line || null) : null };
     });
 
     tipViews.push({
@@ -126,6 +126,7 @@ export function buildClientView(clientId) {
       pnlUnits: e ? e.pnlUnits : 0,
       stakeUnits: e ? e.stakeUnits : null,
       odd: e && e.legs && e.legs[0] ? e.legs[0].odd : null,
+      clientLine: e ? (e.line || null) : null,
     };
   });
   return { client: { id, name: rosterEntry ? rosterEntry.name : id }, tips, meses: dash.meses };

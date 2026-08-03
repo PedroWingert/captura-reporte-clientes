@@ -80,7 +80,8 @@ export class JsonStore {
       clientName: record.clientName ?? prev?.clientName ?? null,
       status: record.status, // 'taken' | 'declined' | 'different'
       odd: record.odd ?? null,
-      stakes: record.stakes ?? null, // array de {house, stake, odd} quando dividiu
+      stakes: record.stakes ?? null, // array de pernas {house, stakeUnits, odd}
+      line: record.line ?? prev?.line ?? null, // linha diferente informada pelo cliente
       source: record.source, // 'button' | 'form'
       actionTs: incomingTs,
       receivedTs: nowIso(),

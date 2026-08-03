@@ -131,6 +131,7 @@ async function handleApi(req, res, url) {
       clientId: auth.clientId,
       clientName: auth.clientName,
       stakes,
+      line: typeof body.line === 'string' ? body.line.trim() : '',
     });
     // Recusa de portao tambem responde 200 com ok:false e a mensagem-guia (armadilha 5).
     return send(res, 200, out);

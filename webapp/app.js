@@ -112,7 +112,9 @@
     }
     submitBtn.disabled = true;
     try {
-      const out = await api('/api/report', { stakes });
+      const linhaEl = document.getElementById('linha');
+      const line = linhaEl ? linhaEl.value.trim() : '';
+      const out = await api('/api/report', { stakes, line });
       showMessage(out.message || (out.ok ? 'Registrado.' : 'Nao foi possivel registrar.'), !!out.ok);
       if (out.ok && tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
     } catch (e) {
