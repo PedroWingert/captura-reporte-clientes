@@ -217,8 +217,8 @@ export async function handleMessage(msg) {
   const fromId = String(msg.from?.id || '');
   const isAdmin = config.adminIds.includes(fromId);
 
-  // /resultados: disponivel para TODOS (clientes) — abre o Mini App "Meus resultados".
-  if (/^\/resultados\b/i.test(text)) {
+  // /resultado(s): disponivel para TODOS (clientes) — abre o Mini App "Meus resultados".
+  if (/^\/resultados?\b/i.test(text)) {
     await sendMessage(chatId, 'Toque abaixo para ver seus resultados 📊', { reply_markup: resultadosMarkup() });
     return;
   }
