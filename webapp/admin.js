@@ -95,7 +95,7 @@
     const meta = [tip.date || '', tip.stakeUnits != null ? `stake ${tip.stakeUnits}u` : '', tip.odd != null ? `@${tip.odd}` : ''].filter(Boolean).join('  ·  ');
     const badge = tip.result ? `<span class="badge ${tip.result}">${{ green: 'GREEN', red: 'RED', void: 'VOID' }[tip.result]}</span>` : '';
     card.innerHTML =
-      `<div class="tip-head"><h3>${esc(tip.home)} x ${esc(tip.away)}</h3>${badge}<span class="tip-meta">${esc(linha)}</span></div>` +
+      `<div class="tip-head"><h3>${esc(tip.home)} x ${esc(tip.away)}</h3>${badge}<span class="tip-meta">${esc(linha)}</span><span class="spacer"></span><button class="del" title="Apagar aposta">🗑 apagar</button></div>` +
       `<div class="tip-meta">${esc(meta)}</div>` +
       `<div class="result-buttons">
          <button class="rbtn green ${tip.result === 'green' ? 'on' : ''}" data-r="green">✅ Green</button>
@@ -107,6 +107,11 @@
       try { render(await api('/api/admin/result', { betKey: tip.betKey, result: r })); }
       catch (e) { alert('Erro: ' + e.message); }
     }));
+    card.querySelector('.del').addEventListener('click', async () => {
+      if (!confirm(`Apagar a aposta "${tip.home} x ${tip.away}"? Isso remove a tip e todos os cliques dela. Não dá pra desfazer.`)) return;
+      try { render(await api('/api/admin/delete-tip', { betKey: tip.betKey })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    });
     for (const en of tip.entries) card.appendChild(entryRow(tip, en));
     return card;
   }

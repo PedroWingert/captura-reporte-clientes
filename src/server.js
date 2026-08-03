@@ -13,7 +13,7 @@ import { config } from './config.js';
 import { validateInitData } from './telegram/initData.js';
 import { getStore } from './store/index.js';
 import { recordForm } from './service.js';
-import { buildDashboard, setResult, setEntry, setClient } from './admin.js';
+import { buildDashboard, setResult, setEntry, setClient, deleteTip, buildClientView } from './admin.js';
 import { VERSION, BOOTED_AT } from './version.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -166,7 +166,22 @@ async function handleApi(req, res, url) {
       setClient(body.clientId, { name: body.name, unitValue: body.unitValue });
       return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
     }
+    if (url.pathname === '/api/admin/delete-tip') {
+      const out = deleteTip(body.betKey);
+      return send(res, 200, { ok: true, removed: out.removedReports, ...buildDashboard({ month: body.month || null }) });
+    }
     return send(res, 404, { ok: false, error: 'rota admin desconhecida' });
+  }
+
+  // ---- Area do cliente (Mini App): so os dados do proprio cliente ----
+  if (url.pathname === '/api/cliente/resultados' && req.method === 'POST') {
+    let body;
+    try { body = await readJsonBody(req); } catch (e) { return send(res, 400, { ok: false, message: e.message }); }
+    const v = validateInitData(body.initData, { botToken: config.botToken, maxAgeSeconds: config.initDataMaxAgeSeconds, store: null });
+    if (!v.ok) return send(res, 401, { ok: false, message: `Sessao invalida: ${v.error}. Reabra pelo botao no Telegram.` });
+    const clientId = String(v.user?.id || '');
+    if (!clientId) return send(res, 401, { ok: false, message: 'Nao identifiquei seu usuario do Telegram.' });
+    return send(res, 200, { ok: true, ...buildClientView(clientId) });
   }
 
   return send(res, 404, { ok: false, error: 'rota desconhecida' });
@@ -183,6 +198,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/admin.js') return serveStatic(res, 'admin.js');
     if (url.pathname === '/admin.css') return serveStatic(res, 'admin.css');
     if (url.pathname === '/charts.js') return serveStatic(res, 'charts.js');
+    if (url.pathname === '/meus' || url.pathname === '/meus.html') return serveStatic(res, 'meus.html');
+    if (url.pathname === '/meus.js') return serveStatic(res, 'meus.js');
+    if (url.pathname === '/meus.css') return serveStatic(res, 'meus.css');
     return send(res, 404, { error: 'nao encontrado' });
   } catch (err) {
     console.error('[server] erro nao tratado:', err);

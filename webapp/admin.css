@@ -96,6 +96,8 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .badge.green { background: rgba(12,163,12,0.15); color: #3ad13a; }
 .badge.red { background: rgba(208,59,59,0.15); color: #f06a6a; }
 .badge.void { background: rgba(137,135,129,0.18); color: var(--text2); }
+.tip-head .del { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.tip-head .del:hover { color: #f06a6a; border-color: rgba(208,59,59,0.5); }
 .result-buttons { display: flex; gap: 8px; margin: 12px 0; }
 .rbtn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
 .rbtn:hover { color: var(--text); }

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Meus resultados</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="./admin.css" />
+  <link rel="stylesheet" href="./meus.css" />
+</head>
+<body>
+  <main id="wrap">
+    <header class="meus-header">
+      <h1 id="hello">Meus resultados</h1>
+      <p id="period" class="muted">—</p>
+    </header>
+
+    <div id="content" hidden>
+      <select id="mes-select" class="mes-sel"></select>
+      <div id="tiles" class="tiles"></div>
+
+      <div class="card">
+        <h2>Minha evolução</h2>
+        <p class="sub">Resultado acumulado em unidades, por data.</p>
+        <div id="chart" class="chart"></div>
+        <p id="chart-empty" class="empty" hidden>Ainda não há apostas resolvidas neste período.</p>
+      </div>
+
+      <div class="card">
+        <h2>Minhas apostas</h2>
+        <div id="bets"></div>
+        <p id="bets-empty" class="empty" hidden>Você ainda não registrou nenhuma aposta.</p>
+      </div>
+    </div>
+
+    <p id="msg" class="empty" hidden></p>
+    <footer><span id="version" class="muted">v…</span></footer>
+  </main>
+
+  <script src="./charts.js"></script>
+  <script src="./meus.js"></script>
+</body>
+</html>

@@ -105,3 +105,28 @@ export function setClient(clientId, { name, unitValue }) {
   if (unitValue !== undefined) patch.unitValue = unitValue === null || unitValue === '' ? null : Number(unitValue);
   return getStore().upsertClient(clientId, patch);
 }
+
+// Apaga a aposta e todos os reportes dela (tip + cliques), de uma vez.
+export function deleteTip(betKey) {
+  return getStore().purgeBet(betKey, { dryRun: false });
+}
+
+// Visao de UM cliente (para a area do cliente no Telegram): so os dados dele.
+export function buildClientView(clientId) {
+  const dash = buildDashboard({});
+  const id = String(clientId);
+  const rosterEntry = dash.roster.find((c) => String(c.id) === id);
+  const tips = dash.tips.map((t) => {
+    const e = t.entries.find((x) => String(x.clientId) === id) || null;
+    return {
+      betKey: t.betKey, date: t.date, month: t.month,
+      home: t.home, away: t.away, market: t.market, line: t.line,
+      result: t.result,
+      estado: e ? e.estado : 'sem_resposta',
+      pnlUnits: e ? e.pnlUnits : 0,
+      stakeUnits: e ? e.stakeUnits : null,
+      odd: e && e.legs && e.legs[0] ? e.legs[0].odd : null,
+    };
+  });
+  return { client: { id, name: rosterEntry ? rosterEntry.name : id }, tips, meses: dash.meses };
+}

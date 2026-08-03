@@ -68,6 +68,11 @@ function formatListaTips() {
   return ['Ultimas tips (use /reporte <chave>):', '', ...linhas].join('\n');
 }
 
+// Botao inline que abre o Mini App "Meus resultados" (web_app, so em chat privado).
+function resultadosMarkup() {
+  return { inline_keyboard: [[{ text: '📊 Meus resultados', web_app: { url: config.publicUrl + '/meus' } }]] };
+}
+
 // Remove acentos e baixa a caixa, para casar chaves escritas de qualquer jeito.
 function normKey(s) {
   return String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -210,17 +215,29 @@ export async function handleMessage(msg) {
 
   const chatId = msg.chat.id;
   const fromId = String(msg.from?.id || '');
+  const isAdmin = config.adminIds.includes(fromId);
 
-  // Autorizacao. Se ninguem foi configurado ainda, ajuda no bootstrap mostrando o id.
-  if (!config.adminIds.includes(fromId)) {
-    await sendMessage(chatId, `Voce nao esta autorizado a publicar tips.\nSeu id do Telegram e: <code>${esc(fromId)}</code>\nPeca para adiciona-lo em ADMIN_IDS.`);
+  // /resultados: disponivel para TODOS (clientes) — abre o Mini App "Meus resultados".
+  if (/^\/resultados\b/i.test(text)) {
+    await sendMessage(chatId, 'Toque abaixo para ver seus resultados 📊', { reply_markup: resultadosMarkup() });
     return;
   }
 
   if (/^\/start\b/i.test(text)) {
-    await sendMessage(chatId, `Bot de captura ativo. Seu id de admin: <code>${esc(fromId)}</code>\n\n${esc(HELP)}`);
+    if (isAdmin) {
+      await sendMessage(chatId, `Bot ativo. Seu id de admin: <code>${esc(fromId)}</code>\n\n${esc(HELP)}`);
+    } else {
+      await sendMessage(chatId, 'Bem-vindo! Toque no botão abaixo para acompanhar seus resultados 📊', { reply_markup: resultadosMarkup() });
+    }
     return;
   }
+
+  // Daqui pra baixo, so admin.
+  if (!isAdmin) {
+    await sendMessage(chatId, 'Para ver seus resultados, use /resultados.');
+    return;
+  }
+
   if (/^\/(ajuda|help)\b/i.test(text)) {
     await sendMessage(chatId, esc(HELP));
     return;
