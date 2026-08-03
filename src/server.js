@@ -182,6 +182,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/admin' || url.pathname === '/admin.html') return serveStatic(res, 'admin.html');
     if (url.pathname === '/admin.js') return serveStatic(res, 'admin.js');
     if (url.pathname === '/admin.css') return serveStatic(res, 'admin.css');
+    if (url.pathname === '/charts.js') return serveStatic(res, 'charts.js');
     return send(res, 404, { error: 'nao encontrado' });
   } catch (err) {
     console.error('[server] erro nao tratado:', err);

@@ -1,88 +1,131 @@
+/* ===== Acerto de contas — dashboard ===== */
 :root {
-  --bg: #14161a;
-  --card: #1e2127;
-  --card2: #262a32;
-  --text: #e8eaed;
-  --muted: #9aa0aa;
-  --accent: #4c8dff;
-  --green: #2ecc71;
-  --red: #e74c3c;
-  --void: #95a5a6;
-  --border: rgba(255,255,255,0.08);
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --surface2: #232322;
+  --text: #ffffff;
+  --text2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255,255,255,0.10);
+  --accent: #3987e5;
+  --green: #0ca30c;
+  --red: #d03b3b;
+  --void: #898781;
+  /* clientes (paleta validada p/ daltonismo, fundo escuro) */
+  --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500;
+  --radius: 14px;
 }
 * { box-sizing: border-box; }
-
-/* O atributo [hidden] tem que vencer qualquer display (ex.: .login usa flex).
-   Sem isto, o login nao some e o dashboard aparece "embaixo" dele. */
+/* [hidden] tem que vencer qualquer display (ex.: .login usa flex) */
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 .muted { color: var(--muted); font-size: 13px; }
 .err { color: var(--red); font-size: 13px; }
 
-/* login */
+/* ===== login ===== */
 .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.login-box { background: var(--card); padding: 24px; border-radius: 14px; width: 100%; max-width: 340px; }
-.login-box h1 { font-size: 20px; margin: 0 0 4px; }
-.login-box input { width: 100%; margin: 12px 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; }
+.login-box { background: var(--surface); padding: 28px; border-radius: 18px; width: 100%; max-width: 340px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.login-box h1 { font-size: 21px; margin: 0 0 4px; }
+.login-box input { width: 100%; margin: 14px 0; padding: 13px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; }
+button.primary { background: var(--accent); color: #fff; border: none; padding: 13px 16px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: filter .15s; }
+button.primary:hover { filter: brightness(1.08); }
+button.link { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 6px; }
+button.link:hover { color: var(--text2); }
 
-button.primary { background: var(--accent); color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
-button.link { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; }
-
-/* topbar */
-.topbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 5; }
-.topbar strong { font-size: 15px; }
-.tabs { display: flex; gap: 4px; margin-left: auto; }
-.tab { background: var(--card); color: var(--muted); border: 1px solid var(--border); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-.tab.active { color: var(--text); border-color: var(--accent); }
-#logout { margin-left: 8px; }
-
-main { padding: 16px; max-width: 900px; margin: 0 auto; }
-
-/* tips (view 1) */
-.tip-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-.tip-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-.tip-head h3 { font-size: 16px; margin: 0; }
-.tip-meta { font-size: 12px; color: var(--muted); }
-.result-buttons { display: flex; gap: 6px; margin: 10px 0; }
-.rbtn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card2); color: var(--text); cursor: pointer; font-size: 13px; }
-.rbtn.green.on { background: var(--green); color: #06231a; border-color: var(--green); font-weight: 700; }
-.rbtn.red.on { background: var(--red); color: #2a0a06; border-color: var(--red); font-weight: 700; }
-.rbtn.void.on { background: var(--void); color: #1a1e1f; border-color: var(--void); font-weight: 700; }
-
-.entry { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
-.entry .who { font-size: 14px; }
-.entry .tag { font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--card2); color: var(--muted); margin-left: 6px; }
-.entry .legs { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; }
-.leg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.leg input { width: 84px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
-.leg .rem { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; }
-.entry .pnl { font-weight: 700; font-size: 14px; text-align: right; white-space: nowrap; }
-.pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); } .pnl.zero { color: var(--muted); }
-.entry .save { background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
-.entry .addleg { background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: 6px; padding: 5px 8px; cursor: pointer; font-size: 12px; }
-.entry.declined .who, .entry.sem_resposta .who { color: var(--muted); }
-.warn { color: #e0a800; font-size: 12px; }
-
-/* tabela (view 2) */
-.mes-head { margin-bottom: 12px; }
-.mes-head select { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 14px; }
-.tabela { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
-.tabela th, .tabela td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-.tabela th { color: var(--muted); font-weight: 600; font-size: 12px; }
-.tabela input { width: 90px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
-.tabela .u.pos, .tabela .brl.pos { color: var(--green); font-weight: 700; }
-.tabela .u.neg, .tabela .brl.neg { color: var(--red); font-weight: 700; }
-
-footer { text-align: center; padding: 16px; }
-
-/* Transicao de "entrar": o dashboard desliza como uma tela nova. */
-@keyframes screenIn {
-  from { opacity: 0; transform: translateX(48px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes loginOut {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(-48px); }
-}
+@keyframes screenIn { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes loginOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-48px); } }
 #app:not([hidden]) { animation: screenIn 0.4s ease; }
 #login.saindo { animation: loginOut 0.25s ease forwards; }
+
+/* ===== topbar ===== */
+.topbar { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(13,13,13,0.85); backdrop-filter: blur(8px); z-index: 10; }
+.brand { font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+.tabs { display: flex; gap: 4px; margin-left: 8px; background: var(--surface); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+.tab { background: transparent; color: var(--muted); border: none; padding: 8px 16px; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .15s; }
+.tab.active { color: var(--text); background: var(--surface2); }
+.tab:hover:not(.active) { color: var(--text2); }
+.spacer { margin-left: auto; }
+
+main { padding: 20px; max-width: 1000px; margin: 0 auto; }
+
+/* ===== filtros ===== */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: var(--surface); border: 1px solid var(--border); color: var(--text2); padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 7px; transition: all .15s; }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+.chip.active { border-color: var(--accent); color: var(--text); background: var(--surface2); }
+.filters select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+
+/* ===== stat tiles ===== */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.tile .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.tile .v { font-size: 26px; font-weight: 700; margin-top: 6px; }
+.v.pos { color: var(--green); } .v.neg { color: var(--red); } .v.zero { color: var(--text); }
+
+/* ===== card / chart ===== */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; }
+.card > h2 { font-size: 15px; margin: 0 0 4px; }
+.card .sub { font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+.chart { position: relative; width: 100%; }
+.chart-tip { position: absolute; background: rgba(20,20,19,0.96); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font-size: 12px; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 130px; }
+.ct-date { color: var(--muted); margin-bottom: 5px; }
+.ct-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+.ct-row b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.ct-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+.empty { color: var(--muted); font-size: 14px; text-align: center; padding: 30px; }
+
+/* ===== apostas (marcar resultado) ===== */
+.tip-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+.tip-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.tip-head h3 { font-size: 16px; margin: 0; }
+.tip-meta { font-size: 12px; color: var(--muted); }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600; }
+.badge.green { background: rgba(12,163,12,0.15); color: #3ad13a; }
+.badge.red { background: rgba(208,59,59,0.15); color: #f06a6a; }
+.badge.void { background: rgba(137,135,129,0.18); color: var(--text2); }
+.result-buttons { display: flex; gap: 8px; margin: 12px 0; }
+.rbtn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
+.rbtn:hover { color: var(--text); }
+.rbtn.green.on { background: var(--green); color: #04220b; border-color: var(--green); font-weight: 700; }
+.rbtn.red.on { background: var(--red); color: #2a0606; border-color: var(--red); font-weight: 700; }
+.rbtn.void.on { background: var(--void); color: #14140f; border-color: var(--void); font-weight: 700; }
+
+.entry { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.entry .who { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.entry .tag { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--surface2); color: var(--muted); }
+.entry .legs { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; }
+.leg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.leg input { width: 84px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+.leg .rem { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; }
+.entry .pnl { font-weight: 700; font-size: 14px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); } .pnl.zero { color: var(--muted); }
+.entry .save { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.entry .addleg { background: none; border: 1px dashed var(--border); color: var(--muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+.entry.declined .who, .entry.sem_resposta .who { color: var(--muted); }
+.warn { color: #fab219; font-size: 12px; }
+
+/* ===== tabela acerto do mes ===== */
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th, .tabela td { padding: 13px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+.tabela th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+.tabela td.num { font-variant-numeric: tabular-nums; }
+.tabela input { width: 92px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+.tabela .cli { display: inline-flex; align-items: center; gap: 8px; }
+.tabela .cli .dot { width: 10px; height: 10px; border-radius: 50%; }
+.tabela .pos { color: var(--green); font-weight: 700; }
+.tabela .neg { color: var(--red); font-weight: 700; }
+
+footer { text-align: center; padding: 20px; }

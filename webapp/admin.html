@@ -21,41 +21,58 @@
   <!-- App -->
   <div id="app" hidden>
     <header class="topbar">
-      <strong>Acerto de contas</strong>
+      <span class="brand">📊 Acerto de contas</span>
       <div class="tabs">
         <button class="tab active" data-view="apostas">Apostas</button>
-        <button class="tab" data-view="mes">Acerto do mês</button>
+        <button class="tab" data-view="resultados">Resultados</button>
       </div>
+      <span class="spacer"></span>
       <button id="refresh" class="link" title="Recarregar dados">↻ atualizar</button>
       <button id="logout" class="link">sair</button>
     </header>
 
     <main>
-      <!-- Visualizacao 1: apostas -->
+      <!-- Apostas: marcar resultado -->
       <section id="view-apostas" class="view">
         <div id="tips"></div>
-        <p id="tips-empty" class="muted" hidden>Nenhuma tip publicada ainda.</p>
+        <p id="tips-empty" class="empty" hidden>Nenhuma tip publicada ainda.</p>
       </section>
 
-      <!-- Visualizacao 2: acerto do mes -->
-      <section id="view-mes" class="view" hidden>
-        <div class="mes-head">
-          <label>Mês:
-            <select id="mes-select"></select>
-          </label>
+      <!-- Resultados: graficos + acerto do mes -->
+      <section id="view-resultados" class="view" hidden>
+        <div class="filters">
+          <div id="cli-chips" class="chips"></div>
+          <span class="spacer"></span>
+          <select id="mes-select"></select>
         </div>
-        <table id="mes-table" class="tabela">
-          <thead>
-            <tr><th>Cliente</th><th>R$/unidade</th><th>Resultado (u)</th><th>Resultado (R$)</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+
+        <div id="tiles" class="tiles"></div>
+
+        <div class="card">
+          <h2>Evolução no tempo</h2>
+          <p class="sub">Resultado acumulado em unidades, por data.</p>
+          <div id="chart" class="chart"></div>
+          <div id="legend" class="legend"></div>
+          <p id="chart-empty" class="empty" hidden>Marque o resultado de alguma aposta (Green/Red) para ver o gráfico.</p>
+        </div>
+
+        <div class="card">
+          <h2>Acerto do mês</h2>
+          <p class="sub">Resultado por cliente. Defina o R$/unidade de cada um para ver em reais.</p>
+          <table id="mes-table" class="tabela">
+            <thead>
+              <tr><th>Cliente</th><th>R$/unidade</th><th>Resultado (u)</th><th>Resultado (R$)</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </section>
     </main>
 
-    <footer><span id="version" class="muted">v…</span></footer>
+    <footer><span id="version" class="muted">—</span></footer>
   </div>
 
+  <script src="./charts.js"></script>
   <script src="./admin.js"></script>
 </body>
 </html>
