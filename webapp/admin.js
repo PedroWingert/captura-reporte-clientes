@@ -37,10 +37,16 @@
     try {
       const data = await api('/api/admin/dashboard', {});
       localStorage.setItem(LS_KEY, token);
-      $('login').hidden = true;
-      $('app').hidden = false;
-      window.scrollTo(0, 0);
-      render(data);
+      // Anima a saida do login e a entrada do dashboard (sensacao de "outra tela").
+      const loginEl = $('login');
+      loginEl.classList.add('saindo');
+      setTimeout(() => {
+        loginEl.hidden = true;
+        loginEl.classList.remove('saindo');
+        $('app').hidden = false;
+        window.scrollTo(0, 0);
+        render(data);
+      }, 220);
     } catch (err) {
       showLogin(err.message === '401' ? 'Senha incorreta.' : 'Falha: ' + err.message);
     }
