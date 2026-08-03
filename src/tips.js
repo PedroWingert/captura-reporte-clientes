@@ -7,7 +7,7 @@
 //    a chave da aposta em startapp. (web_app inline nao e confiavel em canal.)
 import { betKey, assertBetComplete } from './betkey.js';
 import { config, miniAppLink } from './config.js';
-import { postTipMessage } from './telegram/api.js';
+import { postTipMessage, postTipPhoto } from './telegram/api.js';
 import { getStore } from './store/index.js';
 import { VERSION } from './version.js';
 
@@ -55,9 +55,9 @@ export function buildTipMessage(bet) {
 }
 
 // Publica a tip: grava os metadados (kickoff, cap, atributos) e envia ao canal.
-// O cap (teto por cliente) e passado por quem monta a tip; sem ele, o formulario
-// falha fechado (armadilha 4).
-export async function postTip(bet, { send = true } = {}) {
+// `photo` (opcional) e um file_id/URL de imagem: quando presente, a tip vai como
+// foto com legenda + botoes. O cap (teto por cliente) e opcional (ver gates.js).
+export async function postTip(bet, { send = true, photo = null } = {}) {
   assertBetComplete(bet);
   const { key, text, replyMarkup } = buildTipMessage(bet);
 
@@ -74,7 +74,9 @@ export async function postTip(bet, { send = true } = {}) {
 
   let message = null;
   if (send) {
-    message = await postTipMessage(text, replyMarkup);
+    message = photo
+      ? await postTipPhoto(photo, text, replyMarkup)
+      : await postTipMessage(text, replyMarkup);
   }
   return { betKey: key, link: miniAppLink(key), message, text, replyMarkup };
 }

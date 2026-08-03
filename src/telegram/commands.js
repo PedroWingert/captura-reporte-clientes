@@ -145,10 +145,20 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// Pega o file_id da maior versao da foto anexada (se houver).
+function fotoDe(msg) {
+  if (Array.isArray(msg.photo) && msg.photo.length) {
+    return msg.photo[msg.photo.length - 1].file_id; // ultima = maior resolucao
+  }
+  return null;
+}
+
 // Handler de uma mensagem recebida. So age em chat privado de um admin.
 export async function handleMessage(msg) {
-  const text = (msg.text || '').trim();
-  if (!text) return;
+  // Foto com legenda: o texto vem em caption, e a imagem em photo.
+  const text = (msg.text || msg.caption || '').trim();
+  const photo = fotoDe(msg);
+  if (!text) return; // foto sem legenda, sticker, etc. -> ignora
   if (msg.chat?.type !== 'private') return; // nunca reage em canal/grupo
 
   const chatId = msg.chat.id;
@@ -180,10 +190,11 @@ export async function handleMessage(msg) {
   }
 
   try {
-    const out = await postTip(parsed.bet, { send: true });
+    const out = await postTip(parsed.bet, { send: true, photo });
     await sendMessage(
       chatId,
-      `✅ Tip publicada no canal.\nChave: <code>${esc(out.betKey)}</code>\nFormulario "peguei diferente": ${esc(out.link)}`,
+      `✅ Tip publicada no canal${photo ? ' (com imagem)' : ''}.\nChave: <code>${esc(out.betKey)}</code>\nFormulario "peguei diferente": ${esc(out.link)}`,
+      { disable_web_page_preview: true },
     );
   } catch (err) {
     await sendMessage(chatId, `❌ Nao consegui publicar: ${esc(err.message)}`);

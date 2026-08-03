@@ -52,6 +52,19 @@ export async function postTipMessage(text, replyMarkup) {
   });
 }
 
+// Posta uma tip COM imagem (foto + legenda + botoes). `photo` e um file_id do
+// Telegram (reaproveitado da foto que o admin enviou) ou uma URL de imagem.
+export async function postTipPhoto(photo, caption, replyMarkup) {
+  if (!config.channelId) throw new Error('CHANNEL_ID nao configurado');
+  return call('sendPhoto', {
+    chat_id: config.channelId,
+    photo,
+    caption,
+    parse_mode: 'HTML',
+    reply_markup: replyMarkup,
+  });
+}
+
 // Resposta individual ao clique (armadilha 2): so aquele usuario enxerga.
 export async function answerCallbackQuery(callbackQueryId, text, { alert = true } = {}) {
   return call('answerCallbackQuery', {
