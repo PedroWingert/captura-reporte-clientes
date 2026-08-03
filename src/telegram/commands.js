@@ -3,9 +3,9 @@
 //
 // Seguranca: so ids em ADMIN_IDS podem publicar, e so em chat privado. O bot
 // nunca reage no canal (a trava de canal em api.js e a barreira final).
-import { config } from '../config.js';
+import { config, miniAppLink } from '../config.js';
 import { postTip } from '../tips.js';
-import { sendMessage } from './api.js';
+import { sendMessage, postChannelMessage } from './api.js';
 import { getStore } from '../store/index.js';
 import { buildTipReport } from '../report.js';
 
@@ -25,6 +25,8 @@ const HELP = [
   'Para ver quem clicou:',
   '/tips — lista as ultimas tips e suas chaves',
   '/reporte <chave> — mostra quem pegou / nao pegou / pegou diferente (sem chave = ultima tip)',
+  '',
+  '/botaoresultados — publica no canal o botao "Meus resultados" (fixe no topo). Os clientes tambem podem mandar /resultados no privado.',
 ].join('\n');
 
 // Monta o relatorio de uma tip em texto para o Telegram.
@@ -240,6 +242,18 @@ export async function handleMessage(msg) {
 
   if (/^\/(ajuda|help)\b/i.test(text)) {
     await sendMessage(chatId, esc(HELP));
+    return;
+  }
+  if (/^\/botaoresultados\b/i.test(text)) {
+    try {
+      await postChannelMessage(
+        '📊 <b>Acompanhe seus resultados</b>\nToque no botão abaixo para ver suas apostas e sua evolução no mês.',
+        { inline_keyboard: [[{ text: '📊 Meus resultados', url: miniAppLink('meus') }]] },
+      );
+      await sendMessage(chatId, 'Botão publicado no canal ✅. Agora fixe essa mensagem no topo do canal (Fixar).');
+    } catch (e) {
+      await sendMessage(chatId, '❌ Falha ao publicar: ' + esc(e.message));
+    }
     return;
   }
   if (/^\/tips\b/i.test(text)) {

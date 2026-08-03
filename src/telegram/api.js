@@ -65,6 +65,19 @@ export async function postTipPhoto(photo, caption, replyMarkup) {
   });
 }
 
+// Posta uma mensagem fixa no canal (ex.: botao "Meus resultados"). Autorizado
+// a escrever no canal, como o postTip — nunca e um erro/log de sistema.
+export async function postChannelMessage(text, replyMarkup) {
+  if (!config.channelId) throw new Error('CHANNEL_ID nao configurado');
+  return call('sendMessage', {
+    chat_id: config.channelId,
+    text,
+    parse_mode: 'HTML',
+    reply_markup: replyMarkup,
+    disable_web_page_preview: true,
+  });
+}
+
 // Resposta individual ao clique (armadilha 2): so aquele usuario enxerga.
 export async function answerCallbackQuery(callbackQueryId, text, { alert = true } = {}) {
   return call('answerCallbackQuery', {

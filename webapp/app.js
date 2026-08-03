@@ -6,6 +6,14 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
+  // Roteamento: se aberto com startapp=meus (botao "Meus resultados" no canal),
+  // leva para a tela de resultados, preservando o hash com o login do Telegram.
+  const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
+  if (startParam === 'meus') {
+    window.location.replace('/meus' + window.location.search + window.location.hash);
+    return;
+  }
+
   // initData assinado: e o que prova quem e o cliente e de qual tip se trata.
   const initData = (tg && tg.initData) || '';
 
