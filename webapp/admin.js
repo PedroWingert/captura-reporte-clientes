@@ -39,6 +39,7 @@
       localStorage.setItem(LS_KEY, token);
       $('login').hidden = true;
       $('app').hidden = false;
+      window.scrollTo(0, 0);
       render(data);
     } catch (err) {
       showLogin(err.message === '401' ? 'Senha incorreta.' : 'Falha: ' + err.message);
@@ -211,7 +212,7 @@
 
   // auto-login se ja tem token salvo
   if (token) {
-    api('/api/admin/dashboard', {}).then((d) => { $('login').hidden = true; $('app').hidden = false; render(d); }).catch(() => showLogin());
+    api('/api/admin/dashboard', {}).then((d) => { $('login').hidden = true; $('app').hidden = false; window.scrollTo(0, 0); render(d); }).catch(() => showLogin());
   } else {
     showLogin();
   }
