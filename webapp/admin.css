@@ -11,6 +11,10 @@
   --border: rgba(255,255,255,0.08);
 }
 * { box-sizing: border-box; }
+
+/* O atributo [hidden] tem que vencer qualquer display (ex.: .login usa flex).
+   Sem isto, o login nao some e o dashboard aparece "embaixo" dele. */
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
 .muted { color: var(--muted); font-size: 13px; }
 .err { color: var(--red); font-size: 13px; }
