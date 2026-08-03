@@ -49,17 +49,20 @@ export function buildDashboard({ month = null } = {}) {
       let stake = 0;
       let pnl = 0;
       let faltaOdd = false;
+      let resultOverride = null;
       if (r) {
         estado = r.status; // taken | declined | different
+        resultOverride = r.resultOverride || null;
         if (r.status !== 'declined') {
           legs = r.stakes || [];
           stake = entryStakeUnits(legs);
-          pnl = entryPnlUnits(legs, tip.result || null);
-          faltaOdd = entryFaltaOdd(legs, tip.result || null);
+          const effResult = resultOverride || tip.result || null; // individual vence a tip
+          pnl = entryPnlUnits(legs, effResult);
+          faltaOdd = entryFaltaOdd(legs, effResult);
         }
       }
       if ((!month || tipMonth === month)) totals.set(c.id, (totals.get(c.id) || 0) + pnl);
-      return { clientId: c.id, clientName: c.name, estado, legs, stakeUnits: round2(stake), pnlUnits: round2(pnl), faltaOdd, line: r ? (r.line || null) : null };
+      return { clientId: c.id, clientName: c.name, estado, legs, stakeUnits: round2(stake), pnlUnits: round2(pnl), faltaOdd, line: r ? (r.line || null) : null, resultOverride };
     });
 
     tipViews.push({
@@ -111,6 +114,12 @@ export function deleteTip(betKey) {
   return getStore().purgeBet(betKey, { dryRun: false });
 }
 
+// Resultado individual de um cliente numa aposta (override). null = segue a tip.
+export function setEntryResult(betKey, clientId, result) {
+  if (!['green', 'red', 'void', null].includes(result)) throw new Error('resultado invalido');
+  return getStore().setEntryResult(betKey, clientId, result);
+}
+
 // Visao de UM cliente (para a area do cliente no Telegram): so os dados dele.
 export function buildClientView(clientId) {
   const dash = buildDashboard({});
@@ -121,7 +130,7 @@ export function buildClientView(clientId) {
     return {
       betKey: t.betKey, date: t.date, month: t.month,
       home: t.home, away: t.away, market: t.market, line: t.line,
-      result: t.result,
+      result: e && e.resultOverride ? e.resultOverride : t.result, // resultado efetivo do cliente
       estado: e ? e.estado : 'sem_resposta',
       pnlUnits: e ? e.pnlUnits : 0,
       stakeUnits: e ? e.stakeUnits : null,

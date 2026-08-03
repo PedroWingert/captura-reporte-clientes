@@ -136,6 +136,17 @@ export class JsonStore {
     return r;
   }
 
+  // ---- resultado individual de um cliente numa aposta (override do resultado da tip) ----
+  // Usado quando o cliente pegou linha diferente e o resultado dele diverge dos outros.
+  setEntryResult(betKey, clientId, result) {
+    const key = this._rk(betKey, clientId);
+    const r = this.db.reports[key];
+    if (!r) return null;
+    r.resultOverride = result; // 'green' | 'red' | 'void' | null (null = segue a tip)
+    this._flush();
+    return r;
+  }
+
   // ---- cadastro de clientes (nome amigavel + valor da unidade em R$) ----
   getClients() {
     return this.db.clients;

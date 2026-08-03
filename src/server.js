@@ -13,7 +13,7 @@ import { config } from './config.js';
 import { validateInitData } from './telegram/initData.js';
 import { getStore } from './store/index.js';
 import { recordForm } from './service.js';
-import { buildDashboard, setResult, setEntry, setClient, deleteTip, buildClientView } from './admin.js';
+import { buildDashboard, setResult, setEntry, setClient, deleteTip, buildClientView, setEntryResult } from './admin.js';
 import { VERSION, BOOTED_AT } from './version.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -170,6 +170,11 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/admin/delete-tip') {
       const out = deleteTip(body.betKey);
       return send(res, 200, { ok: true, removed: out.removedReports, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/entry-result') {
+      const r = setEntryResult(body.betKey, body.clientId, body.result ?? null);
+      if (!r) return send(res, 404, { ok: false, message: 'Entrada nao encontrada.' });
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
     }
     return send(res, 404, { ok: false, error: 'rota admin desconhecida' });
   }

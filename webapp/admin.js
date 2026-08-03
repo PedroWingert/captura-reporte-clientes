@@ -152,9 +152,10 @@
       catch (e) { alert('Erro: ' + e.message); }
     });
 
+    const effResult = en.resultOverride || tip.result;
     const pnl = document.createElement('div');
     pnl.className = 'pnl ' + cls(en.pnlUnits);
-    pnl.textContent = tip.result ? fmt(en.pnlUnits) + 'u' : '—';
+    pnl.textContent = effResult ? fmt(en.pnlUnits) + 'u' : '—';
 
     row.innerHTML = whoHtml;
     row.appendChild(pnl);
@@ -163,6 +164,21 @@
     actions.append(addBtn, saveBtn);
     if (en.faltaOdd) { const w = document.createElement('span'); w.className = 'warn'; w.textContent = '  ⚠ falta a odd pra calcular o green'; actions.appendChild(w); }
     row.appendChild(actions);
+
+    // Resultado individual — so aparece quando o cliente pegou linha diferente.
+    if (en.line) {
+      const ov = document.createElement('div');
+      ov.className = 'override'; ov.style.gridColumn = '1 / -1';
+      const opts = [['green', 'G'], ['red', 'R'], ['void', 'V']];
+      ov.innerHTML = `<span class="ov-label">Resultado dele (linha ${esc(en.line)}):</span>` +
+        opts.map(([r, l]) => `<button class="ovbtn ${r} ${en.resultOverride === r ? 'on' : ''}" data-r="${r}">${l}</button>`).join('') +
+        `<button class="ovbtn eq ${!en.resultOverride ? 'on' : ''}" data-r="">= tip</button>`;
+      ov.querySelectorAll('.ovbtn').forEach((b) => b.addEventListener('click', async () => {
+        try { render(await api('/api/admin/entry-result', { betKey: tip.betKey, clientId: en.clientId, result: b.dataset.r || null })); }
+        catch (e) { alert('Erro: ' + e.message); }
+      }));
+      row.appendChild(ov);
+    }
     return row;
   }
 
