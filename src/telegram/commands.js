@@ -6,6 +6,8 @@
 import { config } from '../config.js';
 import { postTip } from '../tips.js';
 import { sendMessage } from './api.js';
+import { getStore } from '../store/index.js';
+import { buildTipReport } from '../report.js';
 
 const HELP = [
   'Para publicar uma tip no canal, mande assim (um campo por linha):',
@@ -19,7 +21,52 @@ const HELP = [
   'Obrigatorios: times e mercado. O resto e opcional:',
   'stake (unidades), odd, data (padrao hoje), linha, lado, obs.',
   'apito (horario) e cap (teto): se informar, eu travo o registro depois do jogo / acima do teto.',
+  '',
+  'Para ver quem clicou:',
+  '/tips — lista as ultimas tips e suas chaves',
+  '/reporte <chave> — mostra quem pegou / nao pegou / pegou diferente (sem chave = ultima tip)',
 ].join('\n');
+
+// Monta o relatorio de uma tip em texto para o Telegram.
+function formatReporteTelegram(betKey) {
+  const store = getStore();
+  const tip = store.getTip(betKey);
+  if (!tip) return `Nao achei tip com a chave ${betKey}. Use /tips para ver as chaves.`;
+  const rep = buildTipReport(store, betKey); // sem roster: mostra quem respondeu
+
+  const cab = `${tip.home} x ${tip.away} — ${tip.market}${tip.line ? ' ' + tip.line : ''}`;
+  const linhas = rep.linhas.map((l) => {
+    let d;
+    if (l.estado === 'taken') d = `✅ Peguei${l.odd ? ` @${l.odd}` : ''}`;
+    else if (l.estado === 'declined') d = '❌ Nao peguei';
+    else if (l.estado === 'different') {
+      const casas = (l.stakes || []).map((s) => `${esc(s.house || '?')} R$${s.stake}${s.odd ? ` @${s.odd}` : ''}`).join(' + ');
+      d = `✏️ Diferente: ${casas || (l.total != null ? `R$${l.total}` : '')}`;
+    } else d = 'Nao respondeu';
+    return `• ${esc(l.clientName || l.clientId)} — ${d}`;
+  });
+
+  const r = rep.resumo;
+  return [
+    `📊 <b>${esc(cab)}</b>`,
+    `Chave: <code>${esc(betKey)}</code>`,
+    '',
+    `✅ Peguei: ${r.taken}   ✏️ Diferente: ${r.different}   ❌ Nao peguei: ${r.declined}`,
+    linhas.length ? '\n' + linhas.join('\n') : '\n(ninguem respondeu ainda)',
+  ].join('\n');
+}
+
+// Lista as ultimas tips publicadas, com a chave para consultar o relatorio.
+function formatListaTips() {
+  const store = getStore();
+  const tips = store.listTips().sort((a, b) => new Date(b.updatedTs) - new Date(a.updatedTs)).slice(0, 10);
+  if (!tips.length) return 'Nenhuma tip publicada ainda. Publique com /tip.';
+  const linhas = tips.map((t) => {
+    const n = store.reportsForTip(t.betKey).length;
+    return `• <code>${esc(t.betKey)}</code> — ${esc(t.home)} x ${esc(t.away)} (${n} resposta${n === 1 ? '' : 's'})`;
+  });
+  return ['Ultimas tips (use /reporte <chave>):', '', ...linhas].join('\n');
+}
 
 // Remove acentos e baixa a caixa, para casar chaves escritas de qualquer jeito.
 function normKey(s) {
@@ -176,6 +223,21 @@ export async function handleMessage(msg) {
   }
   if (/^\/(ajuda|help)\b/i.test(text)) {
     await sendMessage(chatId, esc(HELP));
+    return;
+  }
+  if (/^\/tips\b/i.test(text)) {
+    await sendMessage(chatId, formatListaTips(), { disable_web_page_preview: true });
+    return;
+  }
+  if (/^\/(reporte|relatorio)\b/i.test(text)) {
+    const arg = text.split(/\s+/)[1];
+    let key = arg;
+    if (!key) {
+      const tips = getStore().listTips().sort((a, b) => new Date(b.updatedTs) - new Date(a.updatedTs));
+      key = tips[0]?.betKey;
+      if (!key) { await sendMessage(chatId, 'Nenhuma tip ainda. Publique com /tip.'); return; }
+    }
+    await sendMessage(chatId, formatReporteTelegram(key), { disable_web_page_preview: true });
     return;
   }
   if (!/^\/tip\b/i.test(text)) {
