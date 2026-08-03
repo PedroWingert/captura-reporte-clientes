@@ -39,6 +39,10 @@ export const config = {
   miniAppShortName: process.env.MINI_APP_SHORT_NAME || 'app',
   // channelId fica como string; ids de canal do Telegram sao numeros grandes.
   channelId: process.env.CHANNEL_ID || '',
+  // Quem pode publicar tips pelo bot (ids do Telegram, separados por virgula).
+  adminIds: (process.env.ADMIN_IDS || '').split(',').map((s) => s.trim()).filter(Boolean),
+  // Fuso para montar o horario do apito quando so vem "HH:MM".
+  tzOffset: process.env.TZ_OFFSET || '-03:00',
   publicUrl: (process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   port: Number(process.env.PORT || 3000),
   initDataMaxAgeSeconds: Number(process.env.INITDATA_MAX_AGE_SECONDS || 86400),

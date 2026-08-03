@@ -16,9 +16,10 @@ function norm(s) {
 // Campos que definem uma aposta, em ordem fixa (entram todos no hash).
 const FIELDS = ['date', 'home', 'away', 'market', 'side', 'line'];
 
-// Obrigatorios para uma tip valida. 'line' e opcional: mercados como 1x2 nao tem
-// linha; handicap/over-under tem. Vazio entra no hash normalmente (deterministico).
-const REQUIRED = ['date', 'home', 'away', 'market', 'side'];
+// Obrigatorios para uma tip valida. 'line' e 'side' sao opcionais: nem todo mercado
+// tem linha (1x2) ou um lado separado (o mercado ja pode conter a direcao). Vazios
+// entram no hash normalmente (deterministico).
+const REQUIRED = ['date', 'home', 'away', 'market'];
 
 export function betKey(bet) {
   const parts = FIELDS.map((f) => `${f}=${norm(bet[f])}`);

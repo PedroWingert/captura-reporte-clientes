@@ -3,6 +3,7 @@
 import { getUpdates, answerCallbackQuery } from './api.js';
 import { decodeCb } from '../tips.js';
 import { recordButton } from '../service.js';
+import { handleMessage } from './commands.js';
 import { VERSION, BOOTED_AT } from '../version.js';
 
 function clientNameFrom(user) {
@@ -60,6 +61,12 @@ async function loop() {
           await handleCallback(u.callback_query);
         } catch (err) {
           console.error('[bot] handleCallback falhou:', err.message);
+        }
+      } else if (u.message) {
+        try {
+          await handleMessage(u.message);
+        } catch (err) {
+          console.error('[bot] handleMessage falhou:', err.message);
         }
       }
     }

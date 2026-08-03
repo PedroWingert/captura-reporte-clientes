@@ -62,7 +62,8 @@ export async function answerCallbackQuery(callbackQueryId, text, { alert = true 
 }
 
 export async function getUpdates(offset, timeout = 25) {
-  return call('getUpdates', { offset, timeout, allowed_updates: ['callback_query'] });
+  // 'message' cobre os comandos privados do admin (/tip); 'callback_query' os cliques.
+  return call('getUpdates', { offset, timeout, allowed_updates: ['callback_query', 'message'] });
 }
 
 export { call as rawCall };
