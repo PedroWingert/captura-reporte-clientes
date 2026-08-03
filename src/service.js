@@ -2,6 +2,7 @@
 // para que os portoes e o upsert vivam num unico lugar (e nao divirjam).
 import { getStore } from './store/index.js';
 import { kickoffGate, valueCapGate, totalStake } from './gates.js';
+import { config } from './config.js';
 import { VERSION } from './version.js';
 
 // Grava o clique de um botao simples: 'taken' (peguei) ou 'declined' (nao peguei).
@@ -14,7 +15,7 @@ export function recordButton({ betKey, clientId, clientName, status, odd = null,
   const tip = store.getTip(betKey);
 
   // Portao do apito vale para os dois botoes: nada de registrar apos o jogo.
-  const ko = kickoffGate(tip, { now });
+  const ko = kickoffGate(tip, { now, strict: config.strictGates });
   if (!ko.ok) return { ok: false, ...ko };
 
   const res = store.upsertReport({
@@ -42,7 +43,7 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
   const store = getStore();
   const tip = store.getTip(betKey);
 
-  const ko = kickoffGate(tip, { now });
+  const ko = kickoffGate(tip, { now, strict: config.strictGates });
   if (!ko.ok) return { ok: false, ...ko };
 
   if (!Array.isArray(stakes) || stakes.length === 0) {
@@ -50,7 +51,7 @@ export function recordForm({ betKey, clientId, clientName, stakes, actionTs, now
   }
 
   const total = totalStake(stakes);
-  const cap = valueCapGate(tip, total, { now });
+  const cap = valueCapGate(tip, total, { now, strict: config.strictGates });
   if (!cap.ok) return { ok: false, ...cap };
 
   // odd "principal" = a de maior stake, so para exibicao rapida no relatorio.

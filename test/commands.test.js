@@ -24,22 +24,35 @@ test('parseTipCommand: tip completa vira bet valido', () => {
   assert.equal(r.bet.note, 'ambos marcam');
 });
 
-test('parseTipCommand: sem apito falha (falha fechado)', () => {
-  const r = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2\nodd: 2\ncap: 100');
-  assert.equal(r.ok, false);
-  assert.match(r.error, /apito/);
+test('parseTipCommand: minimo (times + mercado) basta', () => {
+  const r = parseTipCommand('/tip\ntimes: Botafogo x Santos\nmercado: Handicap Cartoes - Santos -0.5');
+  assert.equal(r.ok, true);
+  assert.equal(r.bet.home, 'Botafogo');
+  assert.equal(r.bet.away, 'Santos');
+  assert.equal(r.bet.odd, null);
+  assert.equal(r.bet.kickoff, null);
+  assert.equal(r.bet.capValue, null);
+  assert.equal(r.bet.stakeUnits, null);
 });
 
-test('parseTipCommand: sem cap falha (falha fechado)', () => {
-  const r = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2\nodd: 2\napito: 20:00');
-  assert.equal(r.ok, false);
-  assert.match(r.error, /cap/);
+test('parseTipCommand: stake em unidades (0.75u)', () => {
+  const r = parseTipCommand('/tip\ntimes: A x B\nmercado: Under\nstake: 0.75u');
+  assert.equal(r.ok, true);
+  assert.equal(r.bet.stakeUnits, 0.75);
 });
 
-test('parseTipCommand: odd invalida falha', () => {
-  const r = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2\nodd: 0.9\napito: 20:00\ncap: 100');
+test('parseTipCommand: odd invalida falha (se informada)', () => {
+  const r = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2\nodd: 0.9');
   assert.equal(r.ok, false);
   assert.match(r.error, /odd/);
+});
+
+test('parseTipCommand: apito/cap sao opcionais mas travam se invalidos', () => {
+  const ok = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2');
+  assert.equal(ok.ok, true);
+  const badCap = parseTipCommand('/tip\ntimes: A x B\nmercado: 1x2\ncap: -5');
+  assert.equal(badCap.ok, false);
+  assert.match(badCap.error, /cap/);
 });
 
 test('parseTipCommand: times mal formado falha', () => {

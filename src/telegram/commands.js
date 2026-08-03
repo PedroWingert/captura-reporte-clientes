@@ -11,14 +11,14 @@ const HELP = [
   'Para publicar uma tip no canal, mande assim (um campo por linha):',
   '',
   '/tip',
-  'times: Sao Paulo x Palmeiras',
-  'mercado: Over 2.5 gols',
-  'odd: 1.95',
-  'apito: 21:30',
-  'cap: 500',
+  'times: Botafogo x Santos',
+  'mercado: Handicap Asiatico Cartoes - Santos -0.5',
+  'stake: 0.75u',
+  'odd: 2.00',
   '',
-  'Opcionais: data (padrao hoje), linha, lado, obs.',
-  'Sem apito ou sem cap eu recuso: sao eles que travam o registro depois do jogo e acima do limite.',
+  'Obrigatorios: times e mercado. O resto e opcional:',
+  'stake (unidades), odd, data (padrao hoje), linha, lado, obs.',
+  'apito (horario) e cap (teto): se informar, eu travo o registro depois do jogo / acima do teto.',
 ].join('\n');
 
 // Remove acentos e baixa a caixa, para casar chaves escritas de qualquer jeito.
@@ -57,10 +57,17 @@ const ALIAS = {
   line: ['linha', 'line'],
   side: ['lado', 'side'],
   odd: ['odd', 'cotacao', 'cot'],
+  stake: ['stake', 'unidades', 'und', 'unidade'],
   kickoff: ['apito', 'kickoff', 'horario', 'hora', 'inicio'],
   cap: ['cap', 'teto', 'limite'],
   note: ['obs', 'nota', 'note', 'observacao'],
 };
+
+// Le a stake em unidades. Aceita "0.75u", "0,75 un", "1". Retorna numero ou NaN.
+function parseUnits(raw) {
+  const m = String(raw).replace(',', '.').match(/-?\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : NaN;
+}
 
 function pick(fields, canonical) {
   for (const k of ALIAS[canonical]) if (fields[k] !== undefined) return fields[k];
@@ -92,20 +99,45 @@ export function parseTipCommand(text) {
   const market = pick(fields, 'market');
   const line = pick(fields, 'line') || '';
   const side = pick(fields, 'side') || '';
-  const odd = num(pick(fields, 'odd'));
-  const cap = num(pick(fields, 'cap'));
-  const kickoff = montaApito(pick(fields, 'kickoff'), date);
   const note = pick(fields, 'note') || null;
 
+  // Obrigatorios: apenas times e mercado.
   const faltando = [];
-  if (!home || !away) faltando.push('times (ex.: Sao Paulo x Palmeiras)');
+  if (!home || !away) faltando.push('times (ex.: Botafogo x Santos)');
   if (!market) faltando.push('mercado');
-  if (Number.isNaN(odd) || odd <= 1) faltando.push('odd (numero maior que 1)');
-  if (!kickoff) faltando.push('apito (horario do jogo, ex.: 21:30)');
-  if (Number.isNaN(cap) || cap <= 0) faltando.push('cap (teto de valor, numero maior que 0)');
+
+  // Opcionais — so validam se forem informados.
+  const oddRaw = pick(fields, 'odd');
+  let odd = null;
+  if (oddRaw !== undefined) {
+    odd = num(oddRaw);
+    if (Number.isNaN(odd) || odd <= 1) faltando.push('odd (se informar, numero maior que 1)');
+  }
+
+  const stakeRaw = pick(fields, 'stake');
+  let stakeUnits = null;
+  if (stakeRaw !== undefined) {
+    stakeUnits = parseUnits(stakeRaw);
+    if (Number.isNaN(stakeUnits) || stakeUnits <= 0) faltando.push('stake (se informar, unidades > 0, ex.: 0.75u)');
+  }
+
+  const kickoffRaw = pick(fields, 'kickoff');
+  let kickoff = null;
+  if (kickoffRaw !== undefined) {
+    kickoff = montaApito(kickoffRaw, date);
+    if (!kickoff) faltando.push('apito (horario invalido, ex.: 21:30)');
+  }
+
+  const capRaw = pick(fields, 'cap');
+  let capValue = null;
+  if (capRaw !== undefined) {
+    capValue = num(capRaw);
+    if (Number.isNaN(capValue) || capValue <= 0) faltando.push('cap (se informar, numero > 0)');
+  }
+
   if (faltando.length) return { ok: false, error: 'Faltou/invalido: ' + faltando.join('; ') };
 
-  return { ok: true, bet: { date, home, away, market, side, line, odd, kickoff, capValue: cap, note } };
+  return { ok: true, bet: { date, home, away, market, side, line, odd, stakeUnits, kickoff, capValue, note } };
 }
 
 // Escapa para HTML (parse_mode das respostas).

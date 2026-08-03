@@ -30,6 +30,7 @@ export function buildTipMessage(bet) {
   const linhas = [
     `<b>${esc(bet.home)}</b> x <b>${esc(bet.away)}</b>`,
     `${esc(bet.market)} ${esc(bet.side)} ${esc(bet.line || '')}`.trim(),
+    (bet.stakeUnits !== undefined && bet.stakeUnits !== null) ? `Stake: <b>${esc(bet.stakeUnits)}u</b>` : null,
     bet.odd ? `Odd divulgada: <b>@${esc(bet.odd)}</b>` : null,
     bet.kickoff ? `Apito: ${esc(new Date(bet.kickoff).toLocaleString('pt-BR'))}` : null,
     bet.note ? `\n${esc(bet.note)}` : null,
@@ -64,6 +65,7 @@ export async function postTip(bet, { send = true } = {}) {
   getStore().putTip(key, {
     home: bet.home, away: bet.away, market: bet.market, side: bet.side, line: bet.line,
     date: bet.date, odd: bet.odd ?? null,
+    stakeUnits: bet.stakeUnits ?? null,
     kickoff: bet.kickoff ?? null,
     capValue: bet.capValue ?? null,
     note: bet.note ?? null,

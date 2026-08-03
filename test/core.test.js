@@ -66,22 +66,24 @@ test('initData: replay barrado no segundo uso', () => {
   assert.match(v2.error, /replay/);
 });
 
-test('portao do apito falha fechado sem horario', () => {
-  assert.equal(kickoffGate({ kickoff: null }).ok, false);
-  assert.equal(kickoffGate(null).ok, false);
+test('portao do apito: sem horario nao trava no modo padrao, trava no estrito', () => {
+  assert.equal(kickoffGate({ kickoff: null }).ok, true); // padrao: nao gateia
+  assert.equal(kickoffGate({ kickoff: null }, { strict: true }).ok, false); // estrito: falha fechado
+  assert.equal(kickoffGate(null).ok, false); // tip inexistente sempre bloqueia
 });
 
-test('portao do apito bloqueia apos o inicio', () => {
+test('portao do apito bloqueia apos o inicio (quando ha horario)', () => {
   const now = Date.parse('2026-08-01T22:00:00-03:00');
   assert.equal(kickoffGate({ kickoff: '2026-08-01T21:30:00-03:00' }, { now }).ok, false);
   assert.equal(kickoffGate({ kickoff: '2026-08-01T22:30:00-03:00' }, { now }).ok, true);
 });
 
-test('teto falha fechado sem cap e barra acima do teto', () => {
-  assert.equal(valueCapGate({ capValue: null }, 100).ok, false);
-  assert.equal(valueCapGate({ capValue: 500 }, 600).ok, false);
+test('teto: sem cap nao limita no padrao, falha fechado no estrito, barra acima quando ha cap', () => {
+  assert.equal(valueCapGate({ capValue: null }, 100).ok, true); // padrao: nao limita
+  assert.equal(valueCapGate({ capValue: null }, 100, { strict: true }).ok, false); // estrito
+  assert.equal(valueCapGate({ capValue: 500 }, 600).ok, false); // acima do teto
   assert.equal(valueCapGate({ capValue: 500 }, 500).ok, true);
-  assert.equal(valueCapGate({ capValue: 500 }, 0).ok, false);
+  assert.equal(valueCapGate({ capValue: 500 }, 0).ok, false); // valor invalido
 });
 
 test('total das stakes soma varias casas', () => {
