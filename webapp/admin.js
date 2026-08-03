@@ -122,9 +122,9 @@
       const l = document.createElement('div');
       l.className = 'leg';
       l.innerHTML =
-        `<input class="l-stake" type="number" step="0.01" placeholder="stake u" value="${leg.stakeUnits ?? ''}" />` +
+        `<input class="l-stake" type="number" step="0.01" placeholder="stake u" value="${leg.stakeUnits != null ? leg.stakeUnits : ''}" />` +
         `<span class="muted">@</span>` +
-        `<input class="l-odd" type="number" step="0.01" placeholder="odd" value="${Number.isNaN(Number(leg.odd)) ? '' : (leg.odd ?? '')}" />` +
+        `<input class="l-odd" type="number" step="0.01" placeholder="odd" value="${Number.isNaN(Number(leg.odd)) ? '' : (leg.odd != null ? leg.odd : '')}" />` +
         `<button class="rem" title="remover">remover</button>`;
       l.querySelector('.rem').addEventListener('click', () => { l.remove(); });
       legsBox.appendChild(l);
@@ -174,7 +174,7 @@
       const tr = document.createElement('tr');
       tr.innerHTML =
         `<td>${esc(t.name)}</td>` +
-        `<td><input class="uv" type="number" step="0.01" placeholder="R$/u" value="${t.unitValue ?? ''}" data-id="${esc(t.clientId)}" /></td>` +
+        `<td><input class="uv" type="number" step="0.01" placeholder="R$/u" value="${t.unitValue != null ? t.unitValue : ''}" data-id="${esc(t.clientId)}" /></td>` +
         `<td class="u ${cls(t.units)}">${fmt(t.units)}u</td>` +
         `<td class="brl ${cls(t.units)}">${t.brl != null ? 'R$ ' + fmt(t.brl) : '—'}</td>`;
       tb.appendChild(tr);

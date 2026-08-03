@@ -106,7 +106,7 @@
     try {
       const out = await api('/api/report', { stakes });
       showMessage(out.message || (out.ok ? 'Registrado.' : 'Nao foi possivel registrar.'), !!out.ok);
-      if (out.ok && tg) tg.HapticFeedback?.notificationOccurred?.('success');
+      if (out.ok && tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) tg.HapticFeedback.notificationOccurred('success');
     } catch (e) {
       showMessage('Falha de conexao ao enviar. Toque em "Tentar de novo".', false);
     } finally {
