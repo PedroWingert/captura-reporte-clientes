@@ -33,6 +33,7 @@ export function buildTipMessage(bet) {
     (bet.stakeUnits !== undefined && bet.stakeUnits !== null) ? `Stake: <b>${esc(bet.stakeUnits)}u</b>` : null,
     bet.odd ? `Odd divulgada: <b>@${esc(bet.odd)}</b>` : null,
     bet.kickoff ? `Apito: ${esc(new Date(bet.kickoff).toLocaleString('pt-BR'))}` : null,
+    bet.houses ? `\nCasas disponíveis: <b>${esc(bet.houses)}</b>` : null,
     bet.note ? `\n${esc(bet.note)}` : null,
   ].filter(Boolean);
 
@@ -66,6 +67,7 @@ export async function postTip(bet, { send = true, photo = null } = {}) {
     home: bet.home, away: bet.away, market: bet.market, side: bet.side, line: bet.line,
     date: bet.date, odd: bet.odd ?? null,
     stakeUnits: bet.stakeUnits ?? null,
+    houses: bet.houses ?? null,
     kickoff: bet.kickoff ?? null,
     capValue: bet.capValue ?? null,
     note: bet.note ?? null,

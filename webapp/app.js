@@ -94,6 +94,7 @@
       if (!data.ok) { showMessage(data.message || 'Nao foi possivel carregar a tip.', false); return; }
       const t = data.tip;
       tipLine.textContent = `${t.home} x ${t.away} — ${t.market} ${t.side} ${t.line || ''}`.trim();
+      if (t.houses) tipLine.textContent += ` · Casas: ${t.houses}`;
       capValue = data.tip.hasCap ? Number(data.tip.capValue) : null;
       formArea.hidden = false;
       housesBox.appendChild(houseRow());

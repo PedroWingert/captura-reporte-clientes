@@ -113,6 +113,7 @@ async function handleApi(req, res, url) {
       tip: {
         betKey: tip.betKey, home: tip.home, away: tip.away, market: tip.market,
         side: tip.side, line: tip.line, odd: tip.odd, kickoff: tip.kickoff,
+        houses: tip.houses ?? null,
         hasCap: tip.capValue !== undefined && tip.capValue !== null,
         capValue: tip.capValue ?? null,
       },

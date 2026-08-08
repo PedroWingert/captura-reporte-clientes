@@ -19,7 +19,7 @@ const HELP = [
   'odd: 2.00',
   '',
   'Obrigatorios: times e mercado. O resto e opcional:',
-  'stake (unidades), odd, data (padrao hoje), linha, lado, obs.',
+  'stake (unidades), odd, casas (ex.: 7k e Betano), data (padrao hoje), linha, lado, obs.',
   'apito (horario) e cap (teto): se informar, eu travo o registro depois do jogo / acima do teto.',
   '',
   'Para ver quem clicou:',
@@ -112,6 +112,7 @@ const ALIAS = {
   side: ['lado', 'side'],
   odd: ['odd', 'cotacao', 'cot'],
   stake: ['stake', 'unidades', 'und', 'unidade'],
+  houses: ['casas', 'casas disponiveis', 'casasdisponiveis', 'houses'],
   kickoff: ['apito', 'kickoff', 'horario', 'hora', 'inicio'],
   cap: ['cap', 'teto', 'limite'],
   note: ['obs', 'nota', 'note', 'observacao'],
@@ -154,6 +155,7 @@ export function parseTipCommand(text) {
   const line = pick(fields, 'line') || '';
   const side = pick(fields, 'side') || '';
   const note = pick(fields, 'note') || null;
+  const houses = pick(fields, 'houses') || null;
 
   // Obrigatorios: apenas times e mercado.
   const faltando = [];
@@ -191,7 +193,7 @@ export function parseTipCommand(text) {
 
   if (faltando.length) return { ok: false, error: 'Faltou/invalido: ' + faltando.join('; ') };
 
-  return { ok: true, bet: { date, home, away, market, side, line, odd, stakeUnits, kickoff, capValue, note } };
+  return { ok: true, bet: { date, home, away, market, side, line, odd, stakeUnits, houses, kickoff, capValue, note } };
 }
 
 // Escapa para HTML (parse_mode das respostas).
