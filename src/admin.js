@@ -3,6 +3,8 @@
 // de perna, cadastro de cliente). Tudo em UNIDADES; R$ = unidades x valor da unidade.
 import { getStore } from './store/index.js';
 import { entryPnlUnits, entryStakeUnits, entryFaltaOdd, unitsToBRL } from './settlement.js';
+import { betKey, assertBetComplete } from './betkey.js';
+import { VERSION } from './version.js';
 
 // Roster = cadastro de clientes juntado com os clientIds ja vistos nos reports.
 export function buildRoster() {
@@ -95,11 +97,64 @@ export function setResult(betKey, result) {
   return getStore().setTipResult(betKey, result);
 }
 
-export function setEntry(betKey, clientId, legs) {
-  const clean = (Array.isArray(legs) ? legs : [])
+// Nome amigavel do cliente (do roster), para gravar em registros criados na mao.
+function rosterNameFor(clientId) {
+  const c = buildRoster().find((x) => String(x.id) === String(clientId));
+  return c ? c.name : String(clientId);
+}
+
+// Limpa uma lista de pernas vindas do dashboard: descarta stake invalida.
+function cleanLegs(legs, { exigeStake = false } = {}) {
+  return (Array.isArray(legs) ? legs : [])
     .map((l) => ({ house: String(l.house || '').trim(), stakeUnits: Number(l.stakeUnits), odd: Number(l.odd) }))
-    .filter((l) => !Number.isNaN(l.stakeUnits));
-  return getStore().setEntryLegs(betKey, clientId, clean);
+    .filter((l) => !Number.isNaN(l.stakeUnits) && (!exigeStake || l.stakeUnits > 0));
+}
+
+// Lanca/edita a entrada de um cliente pelo dashboard. Cria o registro quando o
+// cliente ficou "sem resposta" (nao clicou nada), aceitando legs, linha e
+// resultado individual de uma vez. Campos ausentes (undefined) sao preservados.
+export function saveEntry(betKey, clientId, { legs, line, result } = {}) {
+  const store = getStore();
+  if (!store.getTip(betKey)) return null; // a aposta precisa existir
+  const clean = legs !== undefined ? cleanLegs(legs) : undefined;
+  return store.adminSetEntry(betKey, clientId, { legs: clean, line, result, clientName: rosterNameFor(clientId) });
+}
+
+// Cria uma aposta "na mao" (nao veio da captura do grupo) e ja lanca as entradas
+// dos clientes escolhidos. bet: { date, home, away, market, side?, line?, stakeUnits?, odd?, result? }
+// entries: [{ clientId, legs:[{stakeUnits,odd}], line?, result? }] — so entra quem tem stake.
+export function addManualTip(bet, entries) {
+  const store = getStore();
+  const meta = {
+    date: String(bet.date || '').trim(),
+    home: String(bet.home || '').trim(),
+    away: String(bet.away || '').trim(),
+    market: String(bet.market || '').trim(),
+    side: bet.side ? String(bet.side).trim() : '',
+    line: bet.line ? String(bet.line).trim() : '',
+  };
+  assertBetComplete(meta); // exige date, home, away, market
+  const key = betKey(meta);
+  store.putTip(key, {
+    ...meta,
+    odd: bet.odd != null && bet.odd !== '' ? Number(bet.odd) : null,
+    stakeUnits: bet.stakeUnits != null && bet.stakeUnits !== '' ? Number(bet.stakeUnits) : null,
+    result: ['green', 'red', 'void'].includes(bet.result) ? bet.result : null,
+    houses: null, kickoff: null, capValue: null,
+    note: 'Lancada na mao pelo tipster.',
+    manual: true,
+    version: VERSION,
+  });
+  let lancadas = 0;
+  for (const e of (Array.isArray(entries) ? entries : [])) {
+    const clean = cleanLegs(e.legs, { exigeStake: true });
+    if (!clean.length) continue; // sem stake valida => nao registra a entrada
+    store.adminSetEntry(key, String(e.clientId), {
+      legs: clean, line: e.line, result: e.result, clientName: rosterNameFor(e.clientId),
+    });
+    lancadas++;
+  }
+  return { betKey: key, entries: lancadas };
 }
 
 export function setClient(clientId, { name, unitValue }) {

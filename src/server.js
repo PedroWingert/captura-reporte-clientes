@@ -13,7 +13,7 @@ import { config } from './config.js';
 import { validateInitData } from './telegram/initData.js';
 import { getStore } from './store/index.js';
 import { recordForm } from './service.js';
-import { buildDashboard, setResult, setEntry, setClient, deleteTip, buildClientView, setEntryResult } from './admin.js';
+import { buildDashboard, setResult, saveEntry, setClient, deleteTip, buildClientView, setEntryResult, addManualTip } from './admin.js';
 import { VERSION, BOOTED_AT } from './version.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -160,9 +160,18 @@ async function handleApi(req, res, url) {
       return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
     }
     if (url.pathname === '/api/admin/entry') {
-      const r = setEntry(body.betKey, body.clientId, body.legs || []);
-      if (!r) return send(res, 404, { ok: false, message: 'Entrada nao encontrada (cliente nao respondeu esta tip).' });
+      const patch = { legs: body.legs || [] };
+      if (body.line !== undefined) patch.line = body.line;
+      if (body.result !== undefined) patch.result = body.result;
+      const r = saveEntry(body.betKey, body.clientId, patch);
+      if (!r) return send(res, 404, { ok: false, message: 'Aposta nao encontrada.' });
       return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/add-tip') {
+      let out;
+      try { out = addManualTip(body.bet || {}, body.entries || []); }
+      catch (e) { return send(res, 400, { ok: false, message: e.message }); }
+      return send(res, 200, { ok: true, betKey: out.betKey, ...buildDashboard({ month: body.month || null }) });
     }
     if (url.pathname === '/api/admin/client') {
       setClient(body.clientId, { name: body.name, unitValue: body.unitValue });

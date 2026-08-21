@@ -147,6 +147,39 @@ export class JsonStore {
     return r;
   }
 
+  // ---- lancamento manual de uma entrada pelo dashboard (acerto de contas) ----
+  // Cria OU atualiza a entrada de um cliente numa aposta, incluindo quem ficou
+  // "sem resposta". Diferente do upsertReport, este NAO passa pela precedencia por
+  // actionTs: e uma acao explicita do tipster, entao sempre vale. Aceita legs, linha
+  // e resultado individual (override) de uma vez. Campos ausentes (undefined) sao
+  // preservados do registro anterior.
+  adminSetEntry(betKey, clientId, { legs, line, result, clientName } = {}) {
+    const key = this._rk(betKey, clientId);
+    const prev = this.db.reports[key] || null;
+    const now = new Date().toISOString();
+    const nextLine = line !== undefined ? (line ? String(line).trim() : null) : (prev ? prev.line : null);
+    const nextStakes = legs !== undefined ? legs : (prev ? prev.stakes : null);
+    const rec = {
+      betKey,
+      clientId: String(clientId),
+      clientName: clientName != null ? clientName : (prev ? prev.clientName : null),
+      // linha informada => "different"; senao "taken" (pegou como divulgado).
+      status: nextLine ? 'different' : 'taken',
+      odd: prev ? prev.odd : null,
+      stakes: nextStakes,
+      line: nextLine,
+      resultOverride: result !== undefined ? (result || null) : (prev ? prev.resultOverride : null),
+      source: prev ? prev.source : 'admin',
+      actionTs: prev ? prev.actionTs : now,
+      receivedTs: prev ? prev.receivedTs : now,
+      editedTs: now,
+      version: prev ? prev.version : null,
+    };
+    this.db.reports[key] = rec;
+    this._flush();
+    return rec;
+  }
+
   // ---- cadastro de clientes (nome amigavel + valor da unidade em R$) ----
   getClients() {
     return this.db.clients;

@@ -127,6 +127,31 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .ovbtn.void.on { background: var(--void); color: #14140f; border-color: var(--void); }
 .ovbtn.eq.on { background: var(--surface2); color: var(--text); border-color: var(--accent); }
 
+/* ===== lancar na mao (entrada de quem ficou sem resposta) ===== */
+.manual-entry { display: flex; flex-direction: column; gap: 8px; padding: 10px 0 4px; }
+.me-line { display: flex; align-items: center; gap: 8px; }
+.me-line .me-line-inp { flex: 1; max-width: 220px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+.me-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ===== aposta na mao (form) ===== */
+.apostas-head { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.primary-sm { background: var(--accent); color: #fff; border: none; padding: 9px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: filter .15s; }
+.primary-sm:hover { filter: brightness(1.08); }
+.manual-card .mf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.mf-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.mf-grid input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+.mf-res { margin-bottom: 8px; }
+.mf-cli-title { font-size: 13px; margin: 10px 0 8px; color: var(--text2); }
+.mf-clients { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.mf-client { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--border); }
+.mf-client:first-child { border-top: none; }
+.mf-chk { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; min-width: 150px; }
+.mf-chk .dot { width: 10px; height: 10px; border-radius: 50%; }
+.mf-inps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mf-inps input { padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
+.mf-inps .mf-c-stake, .mf-inps .mf-c-odd { width: 84px; }
+.mf-inps .mf-c-line { width: 110px; }
+
 /* ===== tabela acerto do mes ===== */
 .tabela { width: 100%; border-collapse: collapse; }
 .tabela th, .tabela td { padding: 13px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }

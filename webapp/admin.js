@@ -123,6 +123,12 @@
     const whoHtml = `<div class="who">${esc(en.clientName)}<span class="tag">${tag}</span>${linhaTag}</div>`;
     if (en.estado === 'declined' || en.estado === 'sem_resposta') {
       row.innerHTML = whoHtml + `<div class="pnl zero">—</div>`;
+      const actions = document.createElement('div'); actions.style.gridColumn = '1 / -1';
+      const openBtn = document.createElement('button');
+      openBtn.className = 'addleg'; openBtn.textContent = '＋ lançar na mão';
+      openBtn.addEventListener('click', () => { openBtn.remove(); row.appendChild(manualEntryForm(tip, en)); });
+      actions.appendChild(openBtn);
+      row.appendChild(actions);
       return row;
     }
     const legsBox = document.createElement('div');
@@ -180,6 +186,157 @@
       row.appendChild(ov);
     }
     return row;
+  }
+
+  // Editor "na mao" para quem ficou SEM RESPOSTA (ou nao pegou): linha + stake/odd
+  // + resultado individual, tudo num salvar so.
+  function manualEntryForm(tip, en) {
+    const wrap = document.createElement('div');
+    wrap.className = 'manual-entry'; wrap.style.gridColumn = '1 / -1';
+
+    const lineRow = document.createElement('div'); lineRow.className = 'me-line';
+    lineRow.innerHTML = `<span class="muted">linha</span><input class="me-line-inp" type="text" placeholder="ex.: +0.25 (opcional)" value="${en.line ? esc(en.line) : ''}" />`;
+
+    const legsBox = document.createElement('div'); legsBox.className = 'legs';
+    const addLegRow = (leg) => {
+      const l = document.createElement('div'); l.className = 'leg';
+      l.innerHTML =
+        `<input class="l-stake" type="number" step="0.01" placeholder="stake u" value="${leg.stakeUnits != null ? leg.stakeUnits : ''}" />` +
+        `<span class="muted">@</span>` +
+        `<input class="l-odd" type="number" step="0.01" placeholder="odd" value="${leg.odd != null ? leg.odd : ''}" />` +
+        `<button class="rem">remover</button>`;
+      l.querySelector('.rem').addEventListener('click', () => l.remove());
+      legsBox.appendChild(l);
+    };
+    addLegRow({ stakeUnits: tip.stakeUnits != null ? tip.stakeUnits : '', odd: tip.odd != null ? tip.odd : '' });
+
+    let chosen = null; // null = segue o resultado da tip
+    const resBox = document.createElement('div'); resBox.className = 'override';
+    const opts = [['green', 'G'], ['red', 'R'], ['void', 'V']];
+    resBox.innerHTML = `<span class="ov-label">Resultado dele:</span>` +
+      opts.map(([r, l]) => `<button type="button" class="ovbtn ${r}" data-r="${r}">${l}</button>`).join('') +
+      `<button type="button" class="ovbtn eq on" data-r="">= tip</button>`;
+    resBox.querySelectorAll('.ovbtn').forEach((b) => b.addEventListener('click', () => {
+      chosen = b.dataset.r || null;
+      resBox.querySelectorAll('.ovbtn').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+    }));
+
+    const foot = document.createElement('div'); foot.className = 'me-foot';
+    const addBtn = document.createElement('button'); addBtn.className = 'addleg'; addBtn.textContent = '+ perna';
+    addBtn.addEventListener('click', () => addLegRow({ stakeUnits: '', odd: '' }));
+    const saveBtn = document.createElement('button'); saveBtn.className = 'save'; saveBtn.textContent = 'salvar';
+    const cancelBtn = document.createElement('button'); cancelBtn.className = 'addleg'; cancelBtn.textContent = 'cancelar';
+    foot.append(addBtn, saveBtn, cancelBtn);
+
+    saveBtn.addEventListener('click', async () => {
+      const legs = [...legsBox.querySelectorAll('.leg')].map((l) => ({
+        stakeUnits: Number(l.querySelector('.l-stake').value || 0),
+        odd: Number(l.querySelector('.l-odd').value || 0),
+      })).filter((x) => x.stakeUnits > 0);
+      if (!legs.length) { alert('Informe a stake (em unidades) da pessoa.'); return; }
+      const line = lineRow.querySelector('.me-line-inp').value.trim();
+      try { render(await api('/api/admin/entry', { betKey: tip.betKey, clientId: en.clientId, legs, line, result: chosen })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    });
+    cancelBtn.addEventListener('click', () => reload());
+
+    wrap.append(lineRow, legsBox, resBox, foot);
+    return wrap;
+  }
+
+  // ===== APOSTA NA MAO (cria uma tip do zero + entradas dos clientes) =====
+  function renderManualForm() {
+    const box = $('manual-form');
+    const today = new Date().toISOString().slice(0, 10);
+    const rm = rosterMap();
+    let tipResult = null;
+    box.innerHTML =
+      `<div class="card manual-card">
+        <h2>Aposta na mão</h2>
+        <p class="sub">Para apostas que não vieram do grupo. Escolha os clientes e a stake de cada um; ela entra no acerto e no portal deles.</p>
+        <div class="mf-grid">
+          <label>Data<input id="mf-date" type="date" value="${today}" /></label>
+          <label>Casa<input id="mf-home" type="text" placeholder="Time da casa" /></label>
+          <label>Fora<input id="mf-away" type="text" placeholder="Time visitante" /></label>
+          <label>Mercado<input id="mf-market" type="text" placeholder="ex.: Over 2.5" /></label>
+          <label>Lado<input id="mf-side" type="text" placeholder="opcional" /></label>
+          <label>Linha<input id="mf-line" type="text" placeholder="opcional" /></label>
+          <label>Stake tip (u)<input id="mf-stake" type="number" step="0.01" placeholder="opcional" /></label>
+          <label>Odd divulgada<input id="mf-odd" type="number" step="0.01" placeholder="opcional" /></label>
+        </div>
+        <div class="mf-res override">
+          <span class="ov-label">Resultado da aposta:</span>
+          <button type="button" class="ovbtn green" data-r="green">G</button>
+          <button type="button" class="ovbtn red" data-r="red">R</button>
+          <button type="button" class="ovbtn void" data-r="void">V</button>
+          <button type="button" class="ovbtn eq on" data-r="">pendente</button>
+        </div>
+        <h3 class="mf-cli-title">Clientes nesta aposta</h3>
+        <div id="mf-clients" class="mf-clients"></div>
+        <div class="me-foot">
+          <button id="mf-save" class="save">Criar aposta</button>
+          <button id="mf-cancel" class="addleg">cancelar</button>
+        </div>
+      </div>`;
+
+    box.querySelectorAll('.mf-res .ovbtn').forEach((b) => b.addEventListener('click', () => {
+      tipResult = b.dataset.r || null;
+      box.querySelectorAll('.mf-res .ovbtn').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+    }));
+
+    const cbox = box.querySelector('#mf-clients');
+    for (const cl of state.roster) {
+      const id = String(cl.id); const color = rm.get(id).color;
+      const row = document.createElement('div'); row.className = 'mf-client';
+      row.innerHTML =
+        `<label class="mf-chk"><input type="checkbox" class="mf-on" /><span class="dot" style="background:${color}"></span>${esc(cl.name)}</label>` +
+        `<div class="mf-inps" hidden>` +
+          `<input class="mf-c-stake" type="number" step="0.01" placeholder="stake u" />` +
+          `<span class="muted">@</span>` +
+          `<input class="mf-c-odd" type="number" step="0.01" placeholder="odd" />` +
+          `<input class="mf-c-line" type="text" placeholder="linha (opc)" /></div>`;
+      row.dataset.id = id;
+      const chk = row.querySelector('.mf-on'); const inps = row.querySelector('.mf-inps');
+      chk.addEventListener('change', () => {
+        inps.hidden = !chk.checked;
+        if (chk.checked) {
+          const s = box.querySelector('#mf-stake').value; const o = box.querySelector('#mf-odd').value;
+          const cs = row.querySelector('.mf-c-stake'); const co = row.querySelector('.mf-c-odd');
+          if (!cs.value && s) cs.value = s;
+          if (!co.value && o) co.value = o;
+        }
+      });
+      cbox.appendChild(row);
+    }
+
+    const close = () => { box.hidden = true; box.innerHTML = ''; };
+    box.querySelector('#mf-cancel').addEventListener('click', close);
+    box.querySelector('#mf-save').addEventListener('click', async () => {
+      const g = (id) => box.querySelector(id).value.trim();
+      const bet = {
+        date: g('#mf-date'), home: g('#mf-home'), away: g('#mf-away'), market: g('#mf-market'),
+        side: g('#mf-side'), line: g('#mf-line'),
+        stakeUnits: box.querySelector('#mf-stake').value, odd: box.querySelector('#mf-odd').value,
+        result: tipResult,
+      };
+      if (!bet.date || !bet.home || !bet.away || !bet.market) { alert('Preencha data, casa, fora e mercado.'); return; }
+      const entries = [];
+      for (const row of cbox.querySelectorAll('.mf-client')) {
+        if (!row.querySelector('.mf-on').checked) continue;
+        const stake = Number(row.querySelector('.mf-c-stake').value || 0);
+        if (!(stake > 0)) continue;
+        entries.push({
+          clientId: row.dataset.id,
+          legs: [{ stakeUnits: stake, odd: Number(row.querySelector('.mf-c-odd').value || 0) }],
+          line: row.querySelector('.mf-c-line').value.trim(),
+        });
+      }
+      if (!entries.length) { alert('Marque pelo menos um cliente com stake maior que zero.'); return; }
+      try { const d = await api('/api/admin/add-tip', { bet, entries }); close(); render(d); }
+      catch (e) { alert('Erro: ' + e.message); }
+    });
   }
 
   // ===== RESULTADOS =====
@@ -308,6 +465,11 @@
     if (t.dataset.view === 'resultados' && state) renderResultados();
   }));
   $('mes-select').addEventListener('change', (e) => { currentMonth = e.target.value || null; if (state) { $('version').textContent = `${state.roster.length} cliente(s)` + (currentMonth ? ` · ${currentMonth}` : ''); renderResultados(); } });
+  $('add-manual').addEventListener('click', () => {
+    const box = $('manual-form');
+    if (!box.hidden) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false; renderManualForm();
+  });
   $('enter').addEventListener('click', tryEnter);
   $('token').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryEnter(); });
   $('logout').addEventListener('click', () => { localStorage.removeItem(LS_KEY); token = ''; showLogin(); });
