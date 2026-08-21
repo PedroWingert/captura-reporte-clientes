@@ -65,16 +65,19 @@
 
     // stats (so apostas que o cliente participou)
     const minhas = tips.filter((t) => t.estado !== 'sem_resposta' && t.estado !== 'declined');
-    let units = 0, greens = 0, reds = 0;
+    let units = 0, greens = 0, reds = 0, stakeResolvido = 0;
     for (const t of minhas) {
       units += Number(t.pnlUnits || 0);
       if (t.result === 'green') greens++; else if (t.result === 'red') reds++;
+      if (t.result) stakeResolvido += Number(t.stakeUnits || 0); // base do ROI: só apostas resolvidas
     }
     units = r2(units);
     const decididas = greens + reds;
     const winrate = decididas ? Math.round((greens / decididas) * 100) : null;
+    const roi = stakeResolvido > 0 ? r2((units / stakeResolvido) * 100) : null;
     const tiles = [
       { k: 'Resultado', v: fmt(units) + 'u', c: cls(units) },
+      { k: 'ROI', v: roi == null ? '—' : fmt(roi) + '%', c: roi == null ? 'zero' : cls(roi) },
       { k: 'Greens', v: greens, c: 'zero' },
       { k: 'Reds', v: reds, c: 'zero' },
       { k: 'Aproveitamento', v: winrate == null ? '—' : winrate + '%', c: 'zero' },
