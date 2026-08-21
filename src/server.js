@@ -174,7 +174,7 @@ async function handleApi(req, res, url) {
       return send(res, 200, { ok: true, betKey: out.betKey, ...buildDashboard({ month: body.month || null }) });
     }
     if (url.pathname === '/api/admin/client') {
-      setClient(body.clientId, { name: body.name, unitValue: body.unitValue });
+      setClient(body.clientId, { name: body.name, unitValue: body.unitValue, hidden: body.hidden });
       return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
     }
     if (url.pathname === '/api/admin/delete-tip') {

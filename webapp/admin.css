@@ -133,8 +133,14 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .me-line .me-line-inp { flex: 1; max-width: 220px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
 .me-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* ===== filtro das apostas ===== */
+.apostas-filtros { display: flex; gap: 6px; flex-wrap: wrap; }
+.fchip { background: var(--surface); border: 1px solid var(--border); color: var(--text2); padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 13px; transition: all .15s; }
+.fchip:hover { color: var(--text); }
+.fchip.active { border-color: var(--accent); color: var(--text); background: var(--surface2); }
+
 /* ===== aposta na mao (form) ===== */
-.apostas-head { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.apostas-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .primary-sm { background: var(--accent); color: #fff; border: none; padding: 9px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: filter .15s; }
 .primary-sm:hover { filter: brightness(1.08); }
 .manual-card .mf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
@@ -162,5 +168,15 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .tabela .cli .dot { width: 10px; height: 10px; border-radius: 50%; }
 .tabela .pos { color: var(--green); font-weight: 700; }
 .tabela .neg { color: var(--red); font-weight: 700; }
+.tabela td.acao { text-align: right; }
+.tabela .ocultar { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.tabela .ocultar:hover { color: #f06a6a; border-color: rgba(208,59,59,0.5); }
+
+/* clientes ocultos (reexibir) */
+.hidden-clients { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hc-label { font-size: 12px; color: var(--muted); }
+.hc-chip { background: var(--surface2); border: 1px dashed var(--border); color: var(--text2); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; transition: all .15s; }
+.hc-chip:hover { color: var(--text); border-color: var(--accent); }
+.hc-chip .hc-x { color: var(--muted); margin-left: 4px; }
 
 footer { text-align: center; padding: 20px; }

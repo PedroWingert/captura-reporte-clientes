@@ -8,6 +8,7 @@
   let state = null;
   let currentMonth = null;
   let currentClient = null; // null = todos
+  let apostasFilter = 'all'; // 'all' | 'pending' (aguardando resposta de alguem)
 
   const CLIENT_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500'];
   const clientColor = (i) => CLIENT_COLORS[i] != null ? CLIENT_COLORS[i] : '#898781';
@@ -83,10 +84,34 @@
   }
 
   // ===== APOSTAS =====
+  // Aposta "aguardando resposta" = algum cliente (nao oculto) ficou sem responder.
+  function tipHasPending(tip) {
+    return tip.entries.some((e) => e.estado === 'sem_resposta');
+  }
+  function renderApostasFiltros() {
+    const box = $('apostas-filtros'); box.innerHTML = '';
+    const total = state.tips.length;
+    const pend = state.tips.filter(tipHasPending).length;
+    const mk = (key, label) => {
+      const b = document.createElement('button');
+      b.className = 'fchip' + (apostasFilter === key ? ' active' : '');
+      b.textContent = label;
+      b.addEventListener('click', () => { apostasFilter = key; renderApostas(); });
+      box.appendChild(b);
+    };
+    mk('all', `Todas (${total})`);
+    mk('pending', `Sem resposta (${pend})`);
+  }
   function renderApostas() {
+    renderApostasFiltros();
     const box = $('tips'); box.innerHTML = '';
-    $('tips-empty').hidden = state.tips.length > 0;
-    for (const tip of state.tips) box.appendChild(tipCard(tip));
+    const tips = apostasFilter === 'pending' ? state.tips.filter(tipHasPending) : state.tips;
+    const empty = $('tips-empty');
+    empty.hidden = tips.length > 0;
+    empty.textContent = apostasFilter === 'pending'
+      ? 'Nenhuma aposta aguardando resposta. 🎉'
+      : 'Nenhuma tip publicada ainda.';
+    for (const tip of tips) box.appendChild(tipCard(tip));
   }
   function tipCard(tip) {
     const card = document.createElement('div');
@@ -447,11 +472,30 @@
         `<td><span class="cli"><span class="dot" style="background:${color}"></span>${esc(cl.name)}</span></td>` +
         `<td><input class="uv" type="number" step="0.01" placeholder="R$/u" value="${uv != null ? uv : ''}" data-id="${esc(id)}" /></td>` +
         `<td class="num ${cls(units)}">${fmt(units)}u</td>` +
-        `<td class="num ${cls(units)}">${brl != null ? 'R$ ' + fmt(brl) : '—'}</td>`;
+        `<td class="num ${cls(units)}">${brl != null ? 'R$ ' + fmt(brl) : '—'}</td>` +
+        `<td class="acao"><button class="ocultar" data-id="${esc(id)}" data-name="${esc(cl.name)}" title="Ocultar do acerto">ocultar</button></td>`;
       tb.appendChild(tr);
     }
     tb.querySelectorAll('.uv').forEach((inp) => inp.addEventListener('change', async () => {
       try { render(await api('/api/admin/client', { clientId: inp.dataset.id, unitValue: inp.value === '' ? null : Number(inp.value) })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    }));
+    tb.querySelectorAll('.ocultar').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm(`Ocultar "${b.dataset.name}" do acerto? Ele some das telas e do filtro, mas os dados ficam guardados — dá pra mostrar de novo.`)) return;
+      try { render(await api('/api/admin/client', { clientId: b.dataset.id, hidden: true })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    }));
+
+    // Clientes ocultos: linha para reexibir.
+    const hbox = $('hidden-clients');
+    const hidden = state.hiddenClients || [];
+    hbox.hidden = hidden.length === 0;
+    hbox.innerHTML = hidden.length
+      ? `<span class="hc-label">Ocultos:</span>` + hidden.map((c) =>
+          `<button class="hc-chip" data-id="${esc(c.id)}" title="Mostrar de novo no acerto">${esc(c.name)} <span class="hc-x">✕</span></button>`).join('')
+      : '';
+    hbox.querySelectorAll('.hc-chip').forEach((b) => b.addEventListener('click', async () => {
+      try { render(await api('/api/admin/client', { clientId: b.dataset.id, hidden: false })); }
       catch (e) { alert('Erro: ' + e.message); }
     }));
   }

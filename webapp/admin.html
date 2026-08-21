@@ -35,6 +35,7 @@
       <!-- Apostas: marcar resultado -->
       <section id="view-apostas" class="view">
         <div class="apostas-head">
+          <div id="apostas-filtros" class="apostas-filtros"></div>
           <button id="add-manual" class="primary-sm">➕ Aposta na mão</button>
         </div>
         <div id="manual-form" hidden></div>
@@ -65,10 +66,11 @@
           <p class="sub">Resultado por cliente. Defina o R$/unidade de cada um para ver em reais.</p>
           <table id="mes-table" class="tabela">
             <thead>
-              <tr><th>Cliente</th><th>R$/unidade</th><th>Resultado (u)</th><th>Resultado (R$)</th></tr>
+              <tr><th>Cliente</th><th>R$/unidade</th><th>Resultado (u)</th><th>Resultado (R$)</th><th></th></tr>
             </thead>
             <tbody></tbody>
           </table>
+          <div id="hidden-clients" class="hidden-clients" hidden></div>
         </div>
       </section>
     </main>

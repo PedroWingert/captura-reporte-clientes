@@ -15,12 +15,28 @@ export function buildRoster() {
     if (!seen.has(String(r.clientId))) seen.set(String(r.clientId), r.clientName);
   }
   const ids = new Set([...Object.keys(clients), ...seen.keys()]);
-  const roster = [...ids].map((id) => {
-    const meta = clients[id] || {};
-    return { id, name: meta.name || seen.get(id) || id, unitValue: meta.unitValue ?? null };
-  });
+  const roster = [...ids]
+    .filter((id) => !(clients[id] && clients[id].hidden)) // clientes ocultos saem do acerto
+    .map((id) => {
+      const meta = clients[id] || {};
+      return { id, name: meta.name || seen.get(id) || id, unitValue: meta.unitValue ?? null };
+    });
   roster.sort((a, b) => String(a.name).localeCompare(String(b.name)));
   return roster;
+}
+
+// Clientes marcados como ocultos (nao entram no acerto, mas podem ser reexibidos).
+export function listHiddenClients() {
+  const store = getStore();
+  const clients = store.getClients();
+  const seen = new Map();
+  for (const r of store.allReports()) {
+    if (!seen.has(String(r.clientId))) seen.set(String(r.clientId), r.clientName);
+  }
+  return Object.keys(clients)
+    .filter((id) => clients[id] && clients[id].hidden)
+    .map((id) => ({ id, name: clients[id].name || seen.get(id) || id }))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
 function ym(dateIso) {
@@ -87,7 +103,7 @@ export function buildDashboard({ month = null } = {}) {
   // Meses disponiveis (para o seletor).
   const meses = [...new Set(tipViews.map((t) => t.month).filter(Boolean))].sort().reverse();
 
-  return { roster, tips: tipViews, totals: totais, month: month || null, meses };
+  return { roster, tips: tipViews, totals: totais, month: month || null, meses, hiddenClients: listHiddenClients() };
 }
 
 // ---- mutacoes ----
@@ -157,10 +173,11 @@ export function addManualTip(bet, entries) {
   return { betKey: key, entries: lancadas };
 }
 
-export function setClient(clientId, { name, unitValue }) {
+export function setClient(clientId, { name, unitValue, hidden }) {
   const patch = {};
   if (name !== undefined) patch.name = String(name);
   if (unitValue !== undefined) patch.unitValue = unitValue === null || unitValue === '' ? null : Number(unitValue);
+  if (hidden !== undefined) patch.hidden = !!hidden; // oculta/reexibe o cliente no acerto
   return getStore().upsertClient(clientId, patch);
 }
 
