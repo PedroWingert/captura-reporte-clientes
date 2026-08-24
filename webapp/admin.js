@@ -390,21 +390,27 @@
 
   function computeStats(scopeClientId) {
     const tips = tipsDoMes();
-    let units = 0, greens = 0, reds = 0, voids = 0;
+    let units = 0, greens = 0, reds = 0, voids = 0, stakeResolvido = 0;
     for (const tip of tips) {
       if (scopeClientId == null) {
         if (tip.result === 'green') greens++; else if (tip.result === 'red') reds++; else if (tip.result === 'void') voids++;
-        for (const e of tip.entries) units += Number(e.pnlUnits || 0);
+        for (const e of tip.entries) {
+          units += Number(e.pnlUnits || 0);
+          // base do ROI: stake das apostas resolvidas (resultado efetivo do cliente ou da tip)
+          if (e.resultOverride || tip.result) stakeResolvido += Number(e.stakeUnits || 0);
+        }
       } else {
         const e = entryOf(tip, scopeClientId);
         if (!e || e.estado === 'declined' || e.estado === 'sem_resposta') continue;
         units += Number(e.pnlUnits || 0);
+        if (e.resultOverride || tip.result) stakeResolvido += Number(e.stakeUnits || 0);
         if (tip.result === 'green') greens++; else if (tip.result === 'red') reds++; else if (tip.result === 'void') voids++;
       }
     }
     const decididas = greens + reds;
     const winrate = decididas ? Math.round((greens / decididas) * 100) : null;
-    return { units: r2(units), greens, reds, voids, winrate };
+    const roi = stakeResolvido > 0 ? r2((units / stakeResolvido) * 100) : null;
+    return { units: r2(units), greens, reds, voids, winrate, roi };
   }
 
   function buildSeries() {
@@ -432,6 +438,7 @@
     const st = computeStats(currentClient);
     const tiles = [
       { k: 'Resultado', v: fmt(st.units) + 'u', c: cls(st.units) },
+      { k: 'ROI', v: st.roi == null ? '—' : fmt(st.roi) + '%', c: st.roi == null ? 'zero' : cls(st.roi) },
       { k: 'Greens', v: st.greens, c: 'zero' },
       { k: 'Reds', v: st.reds, c: 'zero' },
       { k: 'Aproveitamento', v: st.winrate == null ? '—' : st.winrate + '%', c: 'zero' },
