@@ -193,6 +193,20 @@ export class JsonStore {
     return this.db.clients[id];
   }
 
+  // Remove um cliente de vez: apaga o cadastro E todos os reportes dele (em todas
+  // as apostas). Usado para descartar usuarios de teste. Retorna o que foi removido.
+  deleteClient(clientId) {
+    const id = String(clientId);
+    const hadClient = Object.prototype.hasOwnProperty.call(this.db.clients, id);
+    delete this.db.clients[id];
+    let removedReports = 0;
+    for (const key of Object.keys(this.db.reports)) {
+      if (String(this.db.reports[key].clientId) === id) { delete this.db.reports[key]; removedReports++; }
+    }
+    this._flush();
+    return { clientId: id, removedClient: hadClient, removedReports };
+  }
+
   // ---- replay do initData ----
   // Retorna true se o hash ja foi visto (replay). Registra na primeira vez.
   markAuthSeen(hash, authDate) {

@@ -168,9 +168,11 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .tabela .cli .dot { width: 10px; height: 10px; border-radius: 50%; }
 .tabela .pos { color: var(--green); font-weight: 700; }
 .tabela .neg { color: var(--red); font-weight: 700; }
-.tabela td.acao { text-align: right; }
-.tabela .ocultar { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all .15s; }
-.tabela .ocultar:hover { color: #f06a6a; border-color: rgba(208,59,59,0.5); }
+.tabela td.acao { text-align: right; white-space: nowrap; }
+.tabela .ocultar, .tabela .excluir { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.tabela .ocultar:hover { color: var(--text); border-color: var(--accent); }
+.tabela .excluir { margin-left: 6px; }
+.tabela .excluir:hover { color: #f06a6a; border-color: rgba(208,59,59,0.5); }
 
 /* clientes ocultos (reexibir) */
 .hidden-clients { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; }

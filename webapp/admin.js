@@ -473,7 +473,8 @@
         `<td><input class="uv" type="number" step="0.01" placeholder="R$/u" value="${uv != null ? uv : ''}" data-id="${esc(id)}" /></td>` +
         `<td class="num ${cls(units)}">${fmt(units)}u</td>` +
         `<td class="num ${cls(units)}">${brl != null ? 'R$ ' + fmt(brl) : '—'}</td>` +
-        `<td class="acao"><button class="ocultar" data-id="${esc(id)}" data-name="${esc(cl.name)}" title="Ocultar do acerto">ocultar</button></td>`;
+        `<td class="acao"><button class="ocultar" data-id="${esc(id)}" data-name="${esc(cl.name)}" title="Ocultar do acerto">ocultar</button>` +
+        `<button class="excluir" data-id="${esc(id)}" data-name="${esc(cl.name)}" title="Excluir de vez (apaga os dados)">excluir</button></td>`;
       tb.appendChild(tr);
     }
     tb.querySelectorAll('.uv').forEach((inp) => inp.addEventListener('change', async () => {
@@ -483,6 +484,11 @@
     tb.querySelectorAll('.ocultar').forEach((b) => b.addEventListener('click', async () => {
       if (!confirm(`Ocultar "${b.dataset.name}" do acerto? Ele some das telas e do filtro, mas os dados ficam guardados — dá pra mostrar de novo.`)) return;
       try { render(await api('/api/admin/client', { clientId: b.dataset.id, hidden: true })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    }));
+    tb.querySelectorAll('.excluir').forEach((b) => b.addEventListener('click', async () => {
+      if (!confirm(`EXCLUIR "${b.dataset.name}" de vez? Isso apaga o cadastro e TODAS as apostas/registros dele. Não dá pra desfazer.`)) return;
+      try { render(await api('/api/admin/delete-client', { clientId: b.dataset.id })); }
       catch (e) { alert('Erro: ' + e.message); }
     }));
 

@@ -186,6 +186,11 @@ export function deleteTip(betKey) {
   return getStore().purgeBet(betKey, { dryRun: false });
 }
 
+// Remove um cliente de vez (cadastro + todos os reportes dele). Para usuarios de teste.
+export function deleteClient(clientId) {
+  return getStore().deleteClient(clientId);
+}
+
 // Resultado individual de um cliente numa aposta (override). null = segue a tip.
 export function setEntryResult(betKey, clientId, result) {
   if (!['green', 'red', 'void', null].includes(result)) throw new Error('resultado invalido');
