@@ -24,6 +24,16 @@ test('parseTipCommand: tip completa vira bet valido', () => {
   assert.equal(r.bet.note, 'ambos marcam');
 });
 
+test('parseTipCommand: liga (campeonato) e opcional e reconhece aliases', () => {
+  const r = parseTipCommand('/tip\ntimes: Botafogo x Santos\nmercado: Over 2.5\nliga: Brasileirao');
+  assert.equal(r.ok, true);
+  assert.equal(r.bet.liga, 'Brasileirao');
+  const r2 = parseTipCommand('/tip\ntimes: A x B\nmercado: Over 2.5\ncampeonato: La Liga');
+  assert.equal(r2.bet.liga, 'La Liga');
+  const semLiga = parseTipCommand('/tip\ntimes: A x B\nmercado: Over 2.5');
+  assert.equal(semLiga.bet.liga, null);
+});
+
 test('parseTipCommand: minimo (times + mercado) basta', () => {
   const r = parseTipCommand('/tip\ntimes: Botafogo x Santos\nmercado: Handicap Cartoes - Santos -0.5');
   assert.equal(r.ok, true);

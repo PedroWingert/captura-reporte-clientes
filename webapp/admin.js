@@ -331,6 +331,7 @@
           <label>Mercado<input id="mf-market" type="text" placeholder="ex.: Over 2.5" /></label>
           <label>Lado<input id="mf-side" type="text" placeholder="opcional" /></label>
           <label>Linha<input id="mf-line" type="text" placeholder="opcional" /></label>
+          <label>Liga<input id="mf-liga" type="text" placeholder="opcional" /></label>
           <label>Stake tip (u)<input id="mf-stake" type="number" step="0.01" placeholder="opcional" /></label>
           <label>Odd divulgada<input id="mf-odd" type="number" step="0.01" placeholder="opcional" /></label>
         </div>
@@ -386,7 +387,7 @@
       const g = (id) => box.querySelector(id).value.trim();
       const bet = {
         date: g('#mf-date'), home: g('#mf-home'), away: g('#mf-away'), market: g('#mf-market'),
-        side: g('#mf-side'), line: g('#mf-line'),
+        side: g('#mf-side'), line: g('#mf-line'), liga: g('#mf-liga'),
         stakeUnits: box.querySelector('#mf-stake').value, odd: box.querySelector('#mf-odd').value,
         result: tipResult,
       };

@@ -154,6 +154,8 @@ export function addManualTip(bet, entries) {
   };
   assertBetComplete(meta); // exige date, home, away, market
   const key = betKey(meta);
+  const liga = bet.liga ? String(bet.liga).trim() : '';
+  const tags = liga ? cleanTags({ ...suggestTags(meta), liga }) : null;
   store.putTip(key, {
     ...meta,
     odd: bet.odd != null && bet.odd !== '' ? Number(bet.odd) : null,
@@ -161,6 +163,7 @@ export function addManualTip(bet, entries) {
     result: ['green', 'red', 'void'].includes(bet.result) ? bet.result : null,
     houses: null, kickoff: null, capValue: null,
     note: 'Lancada na mao pelo tipster.',
+    tags,
     manual: true,
     version: VERSION,
   });

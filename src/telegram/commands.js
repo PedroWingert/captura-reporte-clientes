@@ -15,11 +15,13 @@ const HELP = [
   '/tip',
   'times: Botafogo x Santos',
   'mercado: Handicap Asiatico Cartoes - Santos -0.5',
+  'liga: Brasileirao',
   'stake: 0.75u',
   'odd: 2.00',
   '',
   'Obrigatorios: times e mercado. O resto e opcional:',
-  'stake (unidades), odd, casas (ex.: 7k e Betano), data (padrao hoje), linha, lado, obs.',
+  'stake (unidades), odd, casas (ex.: 7k e Betano), data (padrao hoje), linha, lado, liga, obs.',
+  'liga (campeonato) alimenta a aba de Analise; o tipo/linha eu tento deduzir do mercado.',
   'apito (horario) e cap (teto): se informar, eu travo o registro depois do jogo / acima do teto.',
   '',
   'Para ver quem clicou:',
@@ -116,6 +118,7 @@ const ALIAS = {
   kickoff: ['apito', 'kickoff', 'horario', 'hora', 'inicio'],
   cap: ['cap', 'teto', 'limite'],
   note: ['obs', 'nota', 'note', 'observacao'],
+  liga: ['liga', 'campeonato', 'competicao', 'torneio'],
 };
 
 // Le a stake em unidades. Aceita "0.75u", "0,75 un", "1". Retorna numero ou NaN.
@@ -156,6 +159,7 @@ export function parseTipCommand(text) {
   const side = pick(fields, 'side') || '';
   const note = pick(fields, 'note') || null;
   const houses = pick(fields, 'houses') || null;
+  const liga = pick(fields, 'liga') || null; // campeonato (p/ a aba Analise)
 
   // Obrigatorios: apenas times e mercado.
   const faltando = [];
@@ -193,7 +197,7 @@ export function parseTipCommand(text) {
 
   if (faltando.length) return { ok: false, error: 'Faltou/invalido: ' + faltando.join('; ') };
 
-  return { ok: true, bet: { date, home, away, market, side, line, odd, stakeUnits, houses, kickoff, capValue, note } };
+  return { ok: true, bet: { date, home, away, market, side, line, odd, stakeUnits, houses, kickoff, capValue, note, liga } };
 }
 
 // Escapa para HTML (parse_mode das respostas).

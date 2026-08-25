@@ -10,6 +10,7 @@ import { config, miniAppLink } from './config.js';
 import { postTipMessage, postTipPhoto } from './telegram/api.js';
 import { getStore } from './store/index.js';
 import { VERSION } from './version.js';
+import { suggestTags, cleanTags } from './tags.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -62,6 +63,12 @@ export async function postTip(bet, { send = true, photo = null } = {}) {
   assertBetComplete(bet);
   const { key, text, replyMarkup } = buildTipMessage(bet);
 
+  // Se a liga veio no /tip, a aposta ja nasce classificada: auto-tags (do texto do
+  // mercado) + a liga informada. Sem liga, deixa sem tags e o dashboard sugere depois.
+  const tags = bet.liga
+    ? cleanTags({ ...suggestTags({ market: bet.market, side: bet.side, line: bet.line, home: bet.home, away: bet.away }), liga: bet.liga })
+    : null;
+
   // Persiste a tip ANTES de enviar: quando o cliente clicar, o metadado ja existe.
   getStore().putTip(key, {
     home: bet.home, away: bet.away, market: bet.market, side: bet.side, line: bet.line,
@@ -71,6 +78,7 @@ export async function postTip(bet, { send = true, photo = null } = {}) {
     kickoff: bet.kickoff ?? null,
     capValue: bet.capValue ?? null,
     note: bet.note ?? null,
+    tags,
     version: VERSION,
   });
 
