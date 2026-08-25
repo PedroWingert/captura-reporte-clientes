@@ -5,6 +5,7 @@ import { getStore } from './store/index.js';
 import { entryPnlUnits, entryStakeUnits, entryFaltaOdd, unitsToBRL } from './settlement.js';
 import { betKey, assertBetComplete } from './betkey.js';
 import { VERSION } from './version.js';
+import { suggestTags, cleanTags } from './tags.js';
 
 // Roster = cadastro de clientes juntado com os clientIds ja vistos nos reports.
 export function buildRoster() {
@@ -87,9 +88,11 @@ export function buildDashboard({ month = null } = {}) {
       betKey: tip.betKey,
       date: tip.date || null,
       month: tipMonth,
-      home: tip.home, away: tip.away, market: tip.market, line: tip.line || '',
+      home: tip.home, away: tip.away, market: tip.market, side: tip.side || '', line: tip.line || '',
       stakeUnits: tip.stakeUnits ?? null, odd: tip.odd ?? null,
       result: tip.result || null,
+      tags: tip.tags || null,        // tags salvas (o tipster confirmou/editou)
+      tagsAuto: suggestTags(tip),    // sugestao do extrator (usada quando ainda nao ha tags)
       entries,
     });
   }
@@ -189,6 +192,22 @@ export function deleteTip(betKey) {
 // Remove um cliente de vez (cadastro + todos os reportes dele). Para usuarios de teste.
 export function deleteClient(clientId) {
   return getStore().deleteClient(clientId);
+}
+
+// ---- tags de classificacao (aba Analise) ----
+// Salva as tags de UMA aposta (o tipster confirmou/editou a sugestao).
+export function setTipTags(betKey, tags) {
+  return getStore().setTipTags(betKey, cleanTags(tags));
+}
+
+// Aplica o extrator em todas as apostas que ainda nao tem tags salvas. Retorna quantas.
+export function autoTagAll() {
+  const store = getStore();
+  let tagged = 0;
+  for (const tip of store.listTips()) {
+    if (!tip.tags) { store.setTipTags(tip.betKey, cleanTags(suggestTags(tip))); tagged++; }
+  }
+  return { tagged };
 }
 
 // Resultado individual de um cliente numa aposta (override). null = segue a tip.

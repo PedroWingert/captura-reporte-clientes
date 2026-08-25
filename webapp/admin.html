@@ -25,6 +25,7 @@
       <div class="tabs">
         <button class="tab active" data-view="apostas">Apostas</button>
         <button class="tab" data-view="resultados">Resultados</button>
+        <button class="tab" data-view="analise">Análise</button>
       </div>
       <span class="spacer"></span>
       <button id="refresh" class="link" title="Recarregar dados">↻ atualizar</button>
@@ -71,6 +72,41 @@
             <tbody></tbody>
           </table>
           <div id="hidden-clients" class="hidden-clients" hidden></div>
+        </div>
+      </section>
+
+      <!-- Analise: assertividade por tipo / linha / time / liga -->
+      <section id="view-analise" class="view" hidden>
+        <div class="filters">
+          <div id="an-unidade" class="chips"></div>
+          <span class="spacer"></span>
+          <select id="an-mes"></select>
+          <button id="autotag" class="primary-sm" title="Preenche as tags que faltam a partir do texto do mercado">✨ Auto-taggear</button>
+        </div>
+
+        <div id="an-tiles" class="tiles"></div>
+
+        <p id="an-empty" class="empty" hidden>Nenhuma aposta classificada ainda. Clique em <b>Auto-taggear</b> e ajuste as tags nas apostas.</p>
+
+        <div class="card">
+          <h2>Por linha</h2>
+          <p class="sub">Quantas de cada linha você mandou e quantas bateram (ex.: Under 5.5 cartões).</p>
+          <div id="an-linha" class="an-table"></div>
+        </div>
+        <div class="card">
+          <h2>Por tipo de mercado</h2>
+          <p class="sub">Under/over/handicap, de time ou de jogo.</p>
+          <div id="an-tipo" class="an-table"></div>
+        </div>
+        <div class="card">
+          <h2>Por time</h2>
+          <p class="sub">Assertividade nas apostas de cada time.</p>
+          <div id="an-time" class="an-table"></div>
+        </div>
+        <div class="card">
+          <h2>Por liga</h2>
+          <p class="sub">Preencha a liga nas apostas para ver este recorte.</p>
+          <div id="an-liga" class="an-table"></div>
         </div>
       </section>
     </main>

@@ -13,7 +13,7 @@ import { config } from './config.js';
 import { validateInitData } from './telegram/initData.js';
 import { getStore } from './store/index.js';
 import { recordForm } from './service.js';
-import { buildDashboard, setResult, saveEntry, setClient, deleteTip, buildClientView, setEntryResult, addManualTip, deleteClient } from './admin.js';
+import { buildDashboard, setResult, saveEntry, setClient, deleteTip, buildClientView, setEntryResult, addManualTip, deleteClient, setTipTags, autoTagAll } from './admin.js';
 import { VERSION, BOOTED_AT } from './version.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -185,6 +185,15 @@ async function handleApi(req, res, url) {
       if (!body.clientId) return send(res, 400, { ok: false, message: 'clientId obrigatorio.' });
       const out = deleteClient(body.clientId);
       return send(res, 200, { ok: true, removedReports: out.removedReports, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/tip-tags') {
+      const tip = setTipTags(body.betKey, body.tags || {});
+      if (!tip) return send(res, 404, { ok: false, message: 'Aposta nao encontrada.' });
+      return send(res, 200, { ok: true, ...buildDashboard({ month: body.month || null }) });
+    }
+    if (url.pathname === '/api/admin/autotag-all') {
+      const out = autoTagAll();
+      return send(res, 200, { ok: true, tagged: out.tagged, ...buildDashboard({ month: body.month || null }) });
     }
     if (url.pathname === '/api/admin/entry-result') {
       const r = setEntryResult(body.betKey, body.clientId, body.result ?? null);

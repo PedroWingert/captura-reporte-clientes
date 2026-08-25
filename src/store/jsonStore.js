@@ -125,6 +125,16 @@ export class JsonStore {
     return tip;
   }
 
+  // ---- tags de classificacao da tip (para a aba de Analise) ----
+  setTipTags(betKey, tags) {
+    const tip = this.db.tips[betKey];
+    if (!tip) return null;
+    tip.tags = tags; // objeto ja sanitizado {escopo,tipo,unidade,linha,time,liga}
+    tip.tagsTs = new Date().toISOString();
+    this._flush();
+    return tip;
+  }
+
   // ---- edicao das pernas de uma entrada (stake/odd) pelo dashboard ----
   setEntryLegs(betKey, clientId, legs) {
     const key = this._rk(betKey, clientId);

@@ -9,6 +9,8 @@
   let currentMonth = null;
   let currentClient = null; // null = todos
   let apostasFilter = 'all'; // 'all' | 'pending' (aguardando resposta de alguem)
+  let analiseMes = null; // null = todos os meses
+  let analiseUnidade = null; // null = todas | 'cartoes' | 'gols' | 'escanteios'
 
   const CLIENT_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500'];
   const clientColor = (i) => CLIENT_COLORS[i] != null ? CLIENT_COLORS[i] : '#898781';
@@ -81,6 +83,7 @@
     renderMesSelect();
     renderChips();
     renderResultados();
+    renderAnalise();
   }
 
   // ===== APOSTAS =====
@@ -138,7 +141,48 @@
       catch (e) { alert('Erro: ' + e.message); }
     });
     for (const en of tip.entries) card.appendChild(entryRow(tip, en));
+    card.appendChild(tagsEditor(tip));
     return card;
+  }
+
+  // ===== TAGS (classificacao para a Analise) =====
+  const ESCOPO_LBL = { time: 'De time', jogo: 'De jogo' };
+  const TIPO_LBL = { under: 'Under', over: 'Over', handicap: 'Handicap', outros: 'Outros' };
+  const UNID_LBL = { cartoes: 'Cartões', gols: 'Gols', escanteios: 'Escanteios', outros: 'Outros' };
+
+  function tagsEditor(tip) {
+    const eff = tip.tags || tip.tagsAuto || {};
+    const saved = !!tip.tags;
+    const wrap = document.createElement('div');
+    wrap.className = 'tags-row';
+    const sel = (cls, options, val, ph) => {
+      let h = `<select class="${cls}"><option value="">${ph}</option>`;
+      for (const [v, l] of options) h += `<option value="${v}" ${v === val ? 'selected' : ''}>${l}</option>`;
+      return h + '</select>';
+    };
+    wrap.innerHTML =
+      `<span class="tags-lbl">tags:</span>` +
+      sel('tg-escopo', [['time', 'De time'], ['jogo', 'De jogo']], eff.escopo || '', 'escopo') +
+      sel('tg-tipo', [['under', 'Under'], ['over', 'Over'], ['handicap', 'Handicap'], ['outros', 'Outros']], eff.tipo || '', 'tipo') +
+      sel('tg-unidade', [['cartoes', 'Cartões'], ['gols', 'Gols'], ['escanteios', 'Escanteios'], ['outros', 'Outros']], eff.unidade || '', 'unidade') +
+      `<input class="tg-linha" type="number" step="0.5" placeholder="linha" value="${eff.linha != null ? eff.linha : ''}" />` +
+      `<input class="tg-time" type="text" placeholder="time" value="${eff.time ? esc(eff.time) : ''}" />` +
+      `<input class="tg-liga" type="text" placeholder="liga" value="${eff.liga ? esc(eff.liga) : ''}" />` +
+      `<button class="tg-save">salvar</button>` +
+      `<span class="tg-flag ${saved ? 'ok' : 'auto'}">${saved ? '✓ salvo' : 'sugerido'}</span>`;
+    wrap.querySelector('.tg-save').addEventListener('click', async () => {
+      const tags = {
+        escopo: wrap.querySelector('.tg-escopo').value,
+        tipo: wrap.querySelector('.tg-tipo').value,
+        unidade: wrap.querySelector('.tg-unidade').value,
+        linha: wrap.querySelector('.tg-linha').value,
+        time: wrap.querySelector('.tg-time').value,
+        liga: wrap.querySelector('.tg-liga').value,
+      };
+      try { render(await api('/api/admin/tip-tags', { betKey: tip.betKey, tags })); }
+      catch (e) { alert('Erro: ' + e.message); }
+    });
+    return wrap;
   }
   function entryRow(tip, en) {
     const row = document.createElement('div');
@@ -513,14 +557,138 @@
     }));
   }
 
+  // ===== ANALISE (assertividade por tipo / linha / time / liga) =====
+  const effTags = (t) => t.tags || t.tagsAuto || {};
+
+  // Agrupa as tips em baldes por uma chave; acumula total/green/red/void e ROI (nivel tip).
+  function buildBuckets(tips, keyFn, labelFn) {
+    const m = new Map();
+    for (const tip of tips) {
+      const key = keyFn(tip);
+      if (key == null || key === '') continue;
+      if (!m.has(key)) m.set(key, { label: labelFn(tip), total: 0, green: 0, red: 0, voids: 0, pnl: 0, stake: 0, hasRoi: false });
+      const b = m.get(key);
+      b.total++;
+      if (tip.result === 'green') b.green++; else if (tip.result === 'red') b.red++; else if (tip.result === 'void') b.voids++;
+      // ROI nivel tip: usa stake/odd divulgados. green precisa de odd; red/void nao.
+      const stake = Number(tip.stakeUnits); const odd = Number(tip.odd);
+      if (Number.isFinite(stake) && stake > 0) {
+        if (tip.result === 'red') { b.stake += stake; b.pnl += -stake; b.hasRoi = true; }
+        else if (tip.result === 'void') { b.stake += stake; b.hasRoi = true; }
+        else if (tip.result === 'green' && Number.isFinite(odd)) { b.stake += stake; b.pnl += stake * (odd - 1); b.hasRoi = true; }
+      }
+    }
+    return [...m.values()];
+  }
+
+  function renderAnTable(elId, rows) {
+    const decid = (b) => b.green + b.red;
+    rows = rows.filter((b) => b.total > 0).sort((a, b) => {
+      const aa = decid(a) ? a.green / decid(a) : -1; const bb = decid(b) ? b.green / decid(b) : -1;
+      return bb - aa || b.total - a.total;
+    });
+    const el = $(elId);
+    if (!rows.length) { el.innerHTML = '<p class="empty" style="padding:16px 0">Sem dados para este recorte.</p>'; return; }
+    const body = rows.map((b) => {
+      const d = decid(b);
+      const assert = d ? Math.round((b.green / d) * 100) : null;
+      const roi = b.hasRoi && b.stake > 0 ? r2((b.pnl / b.stake) * 100) : null;
+      const ac = assert == null ? '' : (assert >= 50 ? 'pos' : 'neg');
+      return `<tr><td>${esc(b.label)}</td><td class="num">${b.total}</td><td class="num">${b.green}</td><td class="num">${b.red}</td>` +
+        `<td class="num ${ac}">${assert == null ? '—' : assert + '%'}</td>` +
+        `<td class="num ${roi == null ? '' : cls(roi)}">${roi == null ? '—' : fmt(roi) + '%'}</td></tr>`;
+    }).join('');
+    el.innerHTML = `<table class="tabela an"><thead><tr><th>Segmento</th><th>Total</th><th>Green</th><th>Red</th><th>Assert.</th><th>ROI</th></tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  function renderAnMesSelect() {
+    const sel = $('an-mes'); sel.innerHTML = '';
+    const optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Todos os meses'; sel.appendChild(optAll);
+    for (const m of (state.meses || [])) {
+      const o = document.createElement('option'); o.value = m; o.textContent = m;
+      if (m === analiseMes) o.selected = true; sel.appendChild(o);
+    }
+    if (!analiseMes) sel.value = '';
+  }
+  function renderAnUnidadeChips() {
+    const box = $('an-unidade'); box.innerHTML = '';
+    const opts = [[null, 'Todas'], ['cartoes', 'Cartões'], ['gols', 'Gols'], ['escanteios', 'Escanteios']];
+    for (const [v, l] of opts) {
+      const b = document.createElement('button');
+      b.className = 'chip' + (analiseUnidade === v ? ' active' : '');
+      b.textContent = l;
+      b.addEventListener('click', () => { analiseUnidade = v; renderAnalise(); });
+      box.appendChild(b);
+    }
+  }
+
+  function renderAnalise() {
+    renderAnUnidadeChips();
+    renderAnMesSelect();
+    let tips = state.tips.filter((t) => !analiseMes || t.month === analiseMes);
+    if (analiseUnidade) tips = tips.filter((t) => effTags(t).unidade === analiseUnidade);
+
+    $('an-empty').hidden = tips.length > 0;
+
+    // tiles resumo (nivel tip)
+    let g = 0, r = 0, v = 0, pnl = 0, stake = 0, hasRoi = false;
+    for (const t of tips) {
+      if (t.result === 'green') g++; else if (t.result === 'red') r++; else if (t.result === 'void') v++;
+      const s = Number(t.stakeUnits); const o = Number(t.odd);
+      if (Number.isFinite(s) && s > 0) {
+        if (t.result === 'red') { stake += s; pnl += -s; hasRoi = true; }
+        else if (t.result === 'void') { stake += s; hasRoi = true; }
+        else if (t.result === 'green' && Number.isFinite(o)) { stake += s; pnl += s * (o - 1); hasRoi = true; }
+      }
+    }
+    const decididas = g + r;
+    const assert = decididas ? Math.round((g / decididas) * 100) : null;
+    const roi = hasRoi && stake > 0 ? r2((pnl / stake) * 100) : null;
+    const tiles = [
+      { k: 'Apostas', v: tips.length, c: 'zero' },
+      { k: 'Assertividade', v: assert == null ? '—' : assert + '%', c: assert == null ? 'zero' : (assert >= 50 ? 'pos' : 'neg') },
+      { k: 'Green / Red', v: `${g} / ${r}`, c: 'zero' },
+      { k: 'ROI', v: roi == null ? '—' : fmt(roi) + '%', c: roi == null ? 'zero' : cls(roi) },
+    ];
+    $('an-tiles').innerHTML = tiles.map((t) => `<div class="tile"><div class="k">${t.k}</div><div class="v ${t.c}">${t.v}</div></div>`).join('');
+
+    // por linha: tipo + linha + unidade (ex.: "Under 5.5 cartões")
+    renderAnTable('an-linha', buildBuckets(tips,
+      (t) => { const g2 = effTags(t); if (g2.tipo == null && g2.linha == null) return null; return [g2.tipo || '?', g2.linha == null ? '?' : g2.linha, g2.unidade || '?'].join('|'); },
+      (t) => { const g2 = effTags(t); return [TIPO_LBL[g2.tipo] || '—', g2.linha == null ? '' : g2.linha, UNID_LBL[g2.unidade] || ''].filter(Boolean).join(' '); }));
+
+    // por tipo de mercado: escopo + tipo + unidade
+    renderAnTable('an-tipo', buildBuckets(tips,
+      (t) => { const g2 = effTags(t); if (!g2.escopo && !g2.tipo) return null; return [g2.escopo || '?', g2.tipo || '?', g2.unidade || '?'].join('|'); },
+      (t) => { const g2 = effTags(t); return [ESCOPO_LBL[g2.escopo] || '', TIPO_LBL[g2.tipo] || '', UNID_LBL[g2.unidade] || ''].filter(Boolean).join(' · '); }));
+
+    // por time
+    renderAnTable('an-time', buildBuckets(tips,
+      (t) => { const g2 = effTags(t); return g2.time ? g2.time.toLowerCase() : null; },
+      (t) => effTags(t).time));
+
+    // por liga
+    renderAnTable('an-liga', buildBuckets(tips,
+      (t) => { const g2 = effTags(t); return g2.liga ? g2.liga.toLowerCase() : null; },
+      (t) => effTags(t).liga));
+  }
+
   // ---- navegacao ----
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
     t.classList.add('active');
     $('view-apostas').hidden = t.dataset.view !== 'apostas';
     $('view-resultados').hidden = t.dataset.view !== 'resultados';
+    $('view-analise').hidden = t.dataset.view !== 'analise';
     if (t.dataset.view === 'resultados' && state) renderResultados();
+    if (t.dataset.view === 'analise' && state) renderAnalise();
   }));
+  $('an-mes').addEventListener('change', (e) => { analiseMes = e.target.value || null; if (state) renderAnalise(); });
+  $('autotag').addEventListener('click', async () => {
+    if (!confirm('Preencher as tags que ainda faltam, a partir do texto do mercado? Você pode ajustar depois em cada aposta.')) return;
+    try { const d = await api('/api/admin/autotag-all', {}); render(d); alert(`Pronto: ${d.tagged} aposta(s) classificada(s). Revise e ajuste onde precisar.`); }
+    catch (e) { alert('Erro: ' + e.message); }
+  });
   $('mes-select').addEventListener('change', (e) => { currentMonth = e.target.value || null; if (state) { $('version').textContent = `${state.roster.length} cliente(s)` + (currentMonth ? ` · ${currentMonth}` : ''); renderResultados(); } });
   $('add-manual').addEventListener('click', () => {
     const box = $('manual-form');

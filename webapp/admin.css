@@ -158,6 +158,27 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .mf-inps .mf-c-stake, .mf-inps .mf-c-odd { width: 84px; }
 .mf-inps .mf-c-line { width: 110px; }
 
+/* ===== editor de tags (classificacao p/ Analise) ===== */
+.tags-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.tags-row .tags-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.tags-row select, .tags-row input { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font-size: 13px; }
+.tags-row .tg-linha { width: 74px; }
+.tags-row .tg-time { width: 110px; }
+.tags-row .tg-liga { width: 120px; }
+.tags-row .tg-save { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.tags-row .tg-flag { font-size: 11px; padding: 3px 8px; border-radius: 999px; }
+.tags-row .tg-flag.ok { color: #3ad13a; background: rgba(12,163,12,0.12); }
+.tags-row .tg-flag.auto { color: #fab219; background: rgba(250,178,25,0.12); }
+
+/* ===== tabelas da Analise ===== */
+#autotag { white-space: nowrap; }
+.an-table { overflow-x: auto; }
+.tabela.an th, .tabela.an td { padding: 10px 12px; }
+.tabela.an td.num { text-align: right; }
+.tabela.an th:not(:first-child) { text-align: right; }
+.tabela.an td.pos, .tabela.an td.num.pos { color: var(--green); font-weight: 700; }
+.tabela.an td.neg, .tabela.an td.num.neg { color: var(--red); font-weight: 700; }
+
 /* ===== tabela acerto do mes ===== */
 .tabela { width: 100%; border-collapse: collapse; }
 .tabela th, .tabela td { padding: 13px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
