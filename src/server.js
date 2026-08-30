@@ -38,7 +38,12 @@ function serveStatic(res, file) {
   fs.readFile(full, (err, data) => {
     if (err) return send(res, 404, { error: 'nao encontrado' });
     const ext = path.extname(full).toLowerCase();
-    send(res, 200, data, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    // Sem cache: o painel e servido direto do disco e muda com frequencia.
+    // Evita o navegador segurar admin.js/admin.css antigos apos um deploy.
+    send(res, 200, data, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      'Cache-Control': 'no-store, must-revalidate',
+    });
   });
 }
 
