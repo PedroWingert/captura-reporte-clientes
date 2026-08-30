@@ -125,7 +125,14 @@ function rosterNameFor(clientId) {
 // Limpa uma lista de pernas vindas do dashboard: descarta stake invalida.
 function cleanLegs(legs, { exigeStake = false } = {}) {
   return (Array.isArray(legs) ? legs : [])
-    .map((l) => ({ house: String(l.house || '').trim(), stakeUnits: Number(l.stakeUnits), odd: Number(l.odd) }))
+    .map((l) => ({
+      house: String(l.house || '').trim(),
+      stakeUnits: Number(l.stakeUnits),
+      odd: Number(l.odd),
+      // resultado proprio da perna (cliente pegou linha diferente em cada uma);
+      // null/ausente => a perna segue o resultado da aposta.
+      result: ['green', 'red', 'void'].includes(l.result) ? l.result : null,
+    }))
     .filter((l) => !Number.isNaN(l.stakeUnits) && (!exigeStake || l.stakeUnits > 0));
 }
 

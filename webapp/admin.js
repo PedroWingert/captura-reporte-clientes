@@ -184,6 +184,29 @@
     });
     return wrap;
   }
+  // Botoes de resultado de UMA perna (G/R/V + "="). "=" (data-r vazio) = a perna
+  // segue o resultado da aposta. Devolve so o HTML; a fiacao e feita em wireLegResult.
+  function legResultButtons(result) {
+    const cur = ['green', 'red', 'void'].includes(result) ? result : '';
+    const opts = [['green', 'G'], ['red', 'R'], ['void', 'V']];
+    return `<span class="leg-res">` +
+      opts.map(([r, l]) => `<button type="button" class="ovbtn ${r} ${cur === r ? 'on' : ''}" data-r="${r}">${l}</button>`).join('') +
+      `<button type="button" class="ovbtn eq ${cur === '' ? 'on' : ''}" data-r="">=</button>` +
+      `</span>`;
+  }
+  // Guarda o resultado escolhido em l.dataset.result e destaca o botao ativo.
+  // Nao salva sozinho: entra junto com stake/odd quando o tipster clica "salvar".
+  function wireLegResult(l) {
+    const box = l.querySelector('.leg-res');
+    if (!box) return;
+    const on = box.querySelector('.ovbtn.on');
+    l.dataset.result = on ? (on.dataset.r || '') : '';
+    box.querySelectorAll('.ovbtn').forEach((b) => b.addEventListener('click', () => {
+      l.dataset.result = b.dataset.r || '';
+      box.querySelectorAll('.ovbtn').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on');
+    }));
+  }
   function entryRow(tip, en) {
     const row = document.createElement('div');
     row.className = 'entry ' + en.estado;
@@ -203,31 +226,40 @@
     const legsBox = document.createElement('div');
     legsBox.className = 'legs';
     const legs = en.legs && en.legs.length ? en.legs : [{ stakeUnits: en.stakeUnits || '', odd: '' }];
+    // Botoes de resultado por perna aparecem quando ha mais de uma perna: o
+    // cliente pode ter gerado cada uma numa linha diferente (uma green, outra red).
+    const multi = legs.length > 1;
     const addLegRow = (leg) => {
       const l = document.createElement('div'); l.className = 'leg';
       l.innerHTML =
         `<input class="l-stake" type="number" step="0.01" placeholder="stake u" value="${leg.stakeUnits != null ? leg.stakeUnits : ''}" />` +
         `<span class="muted">@</span>` +
         `<input class="l-odd" type="number" step="0.01" placeholder="odd" value="${Number.isNaN(Number(leg.odd)) ? '' : (leg.odd != null ? leg.odd : '')}" />` +
+        legResultButtons(leg.result) +
         `<button class="rem">remover</button>`;
+      wireLegResult(l);
       l.querySelector('.rem').addEventListener('click', () => l.remove());
       legsBox.appendChild(l);
     };
     legs.forEach(addLegRow);
+    legsBox.classList.toggle('has-res', multi);
 
     const addBtn = document.createElement('button'); addBtn.className = 'addleg'; addBtn.textContent = '+ perna';
-    addBtn.addEventListener('click', () => addLegRow({ stakeUnits: '', odd: '' }));
+    addBtn.addEventListener('click', () => { addLegRow({ stakeUnits: '', odd: '' }); legsBox.classList.add('has-res'); });
     const saveBtn = document.createElement('button'); saveBtn.className = 'save'; saveBtn.textContent = 'salvar';
     saveBtn.addEventListener('click', async () => {
       const newLegs = [...legsBox.querySelectorAll('.leg')].map((l) => ({
         stakeUnits: Number(l.querySelector('.l-stake').value || 0),
         odd: Number(l.querySelector('.l-odd').value || 0),
+        result: l.dataset.result || null,
       })).filter((x) => x.stakeUnits > 0);
       try { render(await api('/api/admin/entry', { betKey: tip.betKey, clientId: en.clientId, legs: newLegs })); }
       catch (e) { alert('Erro: ' + e.message); }
     });
 
-    const effResult = en.resultOverride || tip.result;
+    // Perna com resultado proprio ja conta como resolvida, mesmo sem override/resultado da tip.
+    const anyLegResult = (en.legs || []).some((l) => ['green', 'red', 'void'].includes(l.result));
+    const effResult = en.resultOverride || tip.result || (anyLegResult ? 'parcial' : null);
     const pnl = document.createElement('div');
     pnl.className = 'pnl ' + cls(en.pnlUnits);
     pnl.textContent = effResult ? fmt(en.pnlUnits) + 'u' : '—';
@@ -240,8 +272,9 @@
     if (en.faltaOdd) { const w = document.createElement('span'); w.className = 'warn'; w.textContent = '  ⚠ falta a odd pra calcular o green'; actions.appendChild(w); }
     row.appendChild(actions);
 
-    // Resultado individual — so aparece quando o cliente pegou linha diferente.
-    if (en.line) {
+    // Resultado individual da entrada — so aparece quando o cliente pegou uma
+    // linha diferente com UMA perna so. Com varias pernas, o resultado e por perna.
+    if (en.line && !multi) {
       const ov = document.createElement('div');
       ov.className = 'override'; ov.style.gridColumn = '1 / -1';
       const opts = [['green', 'G'], ['red', 'R'], ['void', 'V']];
@@ -433,6 +466,12 @@
     state.roster.forEach((cl) => mk(String(cl.id), cl.name, rm.get(String(cl.id)).color));
   }
 
+  // Entrada resolvida = tem override do cliente, resultado da tip, ou alguma
+  // perna com resultado proprio. So o que esta resolvido entra na base do ROI.
+  function entryResolved(e, tip) {
+    return !!(e.resultOverride || tip.result
+      || (e.legs || []).some((l) => ['green', 'red', 'void'].includes(l.result)));
+  }
   function computeStats(scopeClientId) {
     const tips = tipsDoMes();
     let units = 0, greens = 0, reds = 0, voids = 0, stakeResolvido = 0;
@@ -442,13 +481,13 @@
         for (const e of tip.entries) {
           units += Number(e.pnlUnits || 0);
           // base do ROI: stake das apostas resolvidas (resultado efetivo do cliente ou da tip)
-          if (e.resultOverride || tip.result) stakeResolvido += Number(e.stakeUnits || 0);
+          if (entryResolved(e, tip)) stakeResolvido += Number(e.stakeUnits || 0);
         }
       } else {
         const e = entryOf(tip, scopeClientId);
         if (!e || e.estado === 'declined' || e.estado === 'sem_resposta') continue;
         units += Number(e.pnlUnits || 0);
-        if (e.resultOverride || tip.result) stakeResolvido += Number(e.stakeUnits || 0);
+        if (entryResolved(e, tip)) stakeResolvido += Number(e.stakeUnits || 0);
         if (tip.result === 'green') greens++; else if (tip.result === 'red') reds++; else if (tip.result === 'void') voids++;
       }
     }

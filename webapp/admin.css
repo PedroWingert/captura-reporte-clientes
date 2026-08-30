@@ -112,6 +112,9 @@ main { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .leg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .leg input { width: 84px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; }
 .leg .rem { background: none; border: none; color: var(--red); cursor: pointer; font-size: 12px; }
+.leg-res { display: none; align-items: center; gap: 3px; margin-left: 2px; }
+.legs.has-res .leg-res { display: inline-flex; }
+.leg-res .ovbtn { padding: 3px 8px; font-size: 11px; }
 .entry .pnl { font-weight: 700; font-size: 14px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); } .pnl.zero { color: var(--muted); }
 .entry .save { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
