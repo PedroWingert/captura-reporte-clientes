@@ -8,6 +8,7 @@
   let state = null;
   let currentMonth = null;
   let currentClient = null; // null = todos
+  let todosMode = 'soma'; // em "Todos": 'soma' (os clientes somados) | 'media' (media por cliente)
   let apostasFilter = 'all'; // 'all' | 'pending' (aguardando resposta de alguem)
   let analiseMes = null; // null = todos os meses
   let analiseUnidade = null; // null = todas | 'cartoes' | 'gols' | 'escanteios'
@@ -497,6 +498,31 @@
     return { units: r2(units), greens, reds, voids, winrate, roi };
   }
 
+  // Media por cliente (aba "Todos"): calcula os stats de cada cliente que
+  // participou no periodo e tira a media — o desempenho do cliente "tipico",
+  // em vez de somar os quatro. So entram clientes com alguma aposta no periodo.
+  function computeStatsMedia() {
+    const per = state.roster
+      .map((c) => computeStats(String(c.id)))
+      .filter((s) => s.greens + s.reds + s.voids > 0 || s.units !== 0);
+    const n = per.length;
+    if (!n) return { units: 0, greens: 0, reds: 0, voids: 0, winrate: null, roi: null, clientes: 0 };
+    const avg = (pick) => per.reduce((a, s) => a + pick(s), 0) / n;
+    // ROI e aproveitamento: media so entre quem tem o indicador definido.
+    const defined = (pick) => per.map(pick).filter((v) => v != null);
+    const roiv = defined((s) => s.roi);
+    const wrv = defined((s) => s.winrate);
+    return {
+      units: r2(avg((s) => s.units)),
+      greens: r2(avg((s) => s.greens)),
+      reds: r2(avg((s) => s.reds)),
+      voids: r2(avg((s) => s.voids)),
+      roi: roiv.length ? r2(roiv.reduce((a, b) => a + b, 0) / roiv.length) : null,
+      winrate: wrv.length ? Math.round(wrv.reduce((a, b) => a + b, 0) / wrv.length) : null,
+      clientes: n,
+    };
+  }
+
   function buildSeries() {
     const tips = tipsDoMes();
     const dates = tips.map((t) => new Date((t.date || '') + 'T12:00:00').getTime());
@@ -517,14 +543,31 @@
     return { dates, series };
   }
 
+  // Alternador soma/media — so faz sentido em "Todos" (varios clientes).
+  function renderTodosToggle() {
+    const box = $('todos-toggle');
+    if (currentClient != null) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    const mk = (mode, label) => `<button class="fchip ${todosMode === mode ? 'active' : ''}" data-mode="${mode}">${label}</button>`;
+    box.innerHTML =
+      `<span class="tt-label">Como somar os clientes:</span>` +
+      mk('soma', 'Somado') + mk('media', 'Média por cliente');
+    box.querySelectorAll('.fchip').forEach((b) => b.addEventListener('click', () => {
+      todosMode = b.dataset.mode; renderResultados();
+    }));
+  }
+
   function renderResultados() {
-    // tiles
-    const st = computeStats(currentClient);
+    renderTodosToggle();
+    // tiles: em "Todos" com modo media, mostra a media por cliente.
+    const media = currentClient == null && todosMode === 'media';
+    const st = media ? computeStatsMedia() : computeStats(currentClient);
+    const suf = media ? ' <span class="tile-suf">/cliente</span>' : '';
     const tiles = [
-      { k: 'Resultado', v: fmt(st.units) + 'u', c: cls(st.units) },
+      { k: 'Resultado', v: fmt(st.units) + 'u' + suf, c: cls(st.units) },
       { k: 'ROI', v: st.roi == null ? '—' : fmt(st.roi) + '%', c: st.roi == null ? 'zero' : cls(st.roi) },
-      { k: 'Greens', v: st.greens, c: 'zero' },
-      { k: 'Reds', v: st.reds, c: 'zero' },
+      { k: 'Greens', v: st.greens + suf, c: 'zero' },
+      { k: 'Reds', v: st.reds + suf, c: 'zero' },
       { k: 'Aproveitamento', v: st.winrate == null ? '—' : st.winrate + '%', c: 'zero' },
     ];
     $('tiles').innerHTML = tiles.map((t) => `<div class="tile"><div class="k">${t.k}</div><div class="v ${t.c}">${t.v}</div></div>`).join('');
